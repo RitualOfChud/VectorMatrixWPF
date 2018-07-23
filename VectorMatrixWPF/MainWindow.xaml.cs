@@ -15,65 +15,44 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using VectorMatrixWPF.Models;
+
 namespace VectorMatrixWPF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window
     {
 
-        public double _canvasHeight;
-        public double CanvasHeight
-        {
-            get { return _canvasHeight; }
-            set { NotifyPropertyChanged(); _canvasHeight = value; }
-        }
-
-        public double _canvasWidth;
-        public double CanvasWidth
-        {
-            get { return _canvasWidth; }
-            set { NotifyPropertyChanged(); _canvasWidth = value; }
-        }
-
-        public double _canvasHalfWidth;
-        public double CanvasHalfWidth
-        {
-            get { return _canvasHalfWidth; }
-            set { NotifyPropertyChanged(); _canvasHalfWidth = value; }
-        }
-
-        public double _canvasHalfHeight;
-        public double CanvasHalfHeight
-        {
-            get { return _canvasHalfHeight; }
-            set { NotifyPropertyChanged(); _canvasHalfHeight = value; }
-        }
+        public SquareGrid Graph = new SquareGrid(5);
 
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = this;
+            DataContext = Graph;
 
             // resize events
-            Loaded += delegate { ResizeCanvas(new object(), new RoutedEventArgs()); };
-            StateChanged += delegate { ResizeCanvas(new object(), new RoutedEventArgs()); };
-            Chart_Canvas.SizeChanged += ResizeCanvas;
+            Loaded += delegate { Graph.ResizeCanvasElement(Chart_Canvas, new RoutedEventArgs()); };
+            StateChanged += delegate { Graph.ResizeCanvasElement(Chart_Canvas, new RoutedEventArgs()); };
+            Chart_Canvas.SizeChanged += Graph.ResizeCanvasElement;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        private void ResizeCanvas(object sender, RoutedEventArgs e)
+        private void AddVector_ButtonClick(object sender, RoutedEventArgs e)
         {
-            CanvasHeight = Chart_Canvas.ActualHeight;
-            CanvasWidth = Chart_Canvas.ActualWidth;
-            CanvasHalfWidth = CanvasWidth / 2;
-            CanvasHalfHeight = CanvasHeight / 2;
-            Console.WriteLine("");
+            Random rand = new Random(Guid.NewGuid().GetHashCode());
+            Graph.AddVector(Chart_Canvas, rand.Next(-5, 6), rand.Next(-5, 6));
+            Graph.ShowAllVectors(Chart_Canvas);
         }
 
+        private void ShowGridLines_ButtonClick(object sender, RoutedEventArgs e) => Graph.DrawGridLines(Chart_Canvas);
+
+        private void ShowBasisVectors_ButtonClick(object sender, RoutedEventArgs e)
+        {
+            Graph.ShowBasisVectors(Chart_Canvas);
+            Graph.ShowAllVectors(Chart_Canvas);
+        }
+
+        private void Rotate90_ButtonClick(object sender, RoutedEventArgs e) => Graph.Rotate90DegreesClockwise();
     }
 }

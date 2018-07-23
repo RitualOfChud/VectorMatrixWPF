@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="Vectors &amp; Matrices"
         WindowStartupLocation="CenterScreen"
-        Height="673" Width="650" MinHeight="400" MinWidth="400">
+        Height="673" Width="650" MinHeight="400" MinWidth="400"
+        ResizeMode="NoResize">
     <Border Margin="5">
         <Grid>
 
@@ -24,11 +25,19 @@
             <!-- pretty border -->
             <Rectangle Grid.ColumnSpan="2" Grid.RowSpan="2" Stroke="Black" StrokeThickness=".5" RadiusX="10" RadiusY="10" Panel.ZIndex="100"/>
 
-            <Canvas Name="Chart_Canvas" Background="#eee"
-                    Grid.Column="0" Grid.Row="1">
-                <Line Stroke="Black" X1="{Binding CanvasHalfWidth}" Y1="0" X2="{Binding CanvasHalfWidth, Mode=TwoWay}" Y2="{Binding CanvasHeight}"/>
-                <Line Stroke="Black" X1="0" Y1="{Binding CanvasHalfHeight}" X2="{Binding CanvasWidth}" Y2="{Binding CanvasHalfHeight}"/>
-            </Canvas>
+            <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="15" CornerRadius="10">
+                <Canvas Name="Chart_Canvas" Background="#eee">
+                    <Line Stroke="Black" X1="{Binding CanvasXOrigin}" Y1="0" X2="{Binding CanvasXOrigin, Mode=TwoWay}" Y2="{Binding CanvasHeight}"/>
+                    <Line Stroke="Black" X1="0" Y1="{Binding CanvasYOrigin}" X2="{Binding CanvasWidth}" Y2="{Binding CanvasYOrigin}"/>
+                </Canvas>
+            </Border>
+
+            <StackPanel Grid.Column="1" Grid.Row="1">
+                <Button Content="Show Grid Lines" Click="ShowGridLines_ButtonClick"/>
+                <Button Content="Show Basis Vectors" Click="ShowBasisVectors_ButtonClick"/>
+                <Button Content="Add Vector" Click="AddVector_ButtonClick"/>
+                <Button Content="Rotate 90° Clockwise" Click="Rotate90_ButtonClick"/>
+            </StackPanel>
 
         </Grid>
     </Border>
