@@ -18,13 +18,11 @@ namespace VectorMatrixClassLibrary
 
             double ix = origMatrix.IX * transformMatrix.IX + origMatrix.IY * transformMatrix.JX;
             double iy = origMatrix.IX * transformMatrix.IY + origMatrix.IY * transformMatrix.JY;
-            DWVector IVec = new DWVector(ix, iy);
 
             double jx = origMatrix.JX * transformMatrix.IX + origMatrix.JY * transformMatrix.JX;
             double jy = origMatrix.JX * transformMatrix.IY + origMatrix.JY * transformMatrix.JY;
-            DWVector JVec = new DWVector(jx, jy);
 
-            return new DWMatrix(IVec, JVec);
+            return new DWMatrix(ix, iy, jx, jy);
         }
 
         public static DWMatrix RotateNDegreesAntiClockwise(DWMatrix matrix, double angle)
@@ -46,7 +44,6 @@ namespace VectorMatrixClassLibrary
             double jy = -matrix.IY;
             double ix = tempjx;
             double iy = tempjy;
-
 
             return new DWMatrix(ix, iy, jx, jy);
         }

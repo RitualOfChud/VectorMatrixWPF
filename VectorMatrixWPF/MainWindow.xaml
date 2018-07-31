@@ -12,7 +12,7 @@
 
     <Window.Resources>
         <Style TargetType="Button">
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="5"/>
             <Setter Property="Background" Value="#eee"/>
             <Setter Property="Template">
@@ -28,7 +28,7 @@
         </Style>
         
         <Style TargetType="ToggleButton">
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="5"/>
             <Setter Property="Background" Value="#eee"/>
             <Setter Property="Foreground" Value="DarkRed"/>
@@ -61,6 +61,10 @@
                 
             </Style.Triggers>
         </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
         
     </Window.Resources>
     <Border Margin="5">
@@ -79,31 +83,32 @@
             <!-- pretty border -->
             <Rectangle Grid.ColumnSpan="2" Grid.RowSpan="2" Stroke="Black" StrokeThickness=".5" RadiusX="10" RadiusY="10" Panel.ZIndex="100"/>
 
-            <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Height="60">
+            <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Height="50">
                 <Label Content="New Vector" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="15" Padding="5"/>
                 <TextBlock Text="X:" VerticalAlignment="Center" Padding="10"/>
-                <TextBox Name="XVector_TextBox" Width="150" Padding="5" VerticalAlignment="Center"/>
+                <TextBox Name="XVector_TextBox" Width="50" Padding="5" VerticalAlignment="Center"/>
                 <TextBlock Text="Y:" VerticalAlignment="Center" Padding="10"/>
-                <TextBox Name="YVector_TextBox" Width="150" Padding="5" VerticalAlignment="Center"/>
+                <TextBox Name="YVector_TextBox" Width="50" Padding="5" VerticalAlignment="Center"/>
                 <Button Content="Add Vector" Click="AddVector_ButtonClick"/>
             </StackPanel>
 
             <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="15" CornerRadius="10" Panel.ZIndex="-1000">
-                <Canvas Name="Plane" Background="#eee">
-                    <Line Stroke="Black" X1="{Binding CanvasXOrigin}" Y1="0" X2="{Binding CanvasXOrigin, Mode=TwoWay}" Y2="{Binding CanvasHeight}"/>
+                <Canvas Name="Plane" Background="#eee" ClipToBounds="True">
+                    <Line Stroke="Black" X1="{Binding CanvasXOrigin}" Y1="0" X2="{Binding CanvasXOrigin}" Y2="{Binding CanvasHeight}"/>
                     <Line Stroke="Black" X1="0" Y1="{Binding CanvasYOrigin}" X2="{Binding CanvasWidth}" Y2="{Binding CanvasYOrigin}"/>
                 </Canvas>
             </Border>
 
-            <StackPanel Grid.Column="1" Grid.Row="1">
+            <StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2">
 
                 <GroupBox>
 
                     <GroupBox.Header>Display</GroupBox.Header>
 
                     <StackPanel>
-                        <ToggleButton Name="GridLines_Toggle" Content="Grid Lines" Click="ShowGridLines_ButtonClick"/>
-                        <ToggleButton Name="BasisVectors_Toggle" Content="Basis Vectors" Click="ShowBasisVectors_ButtonClick"/>
+                        <ToggleButton Name="GridLines_Toggle" Content="Gridlines" Click="ToggleGridLines_Click"/>
+                        <ToggleButton Name="DefaultGridLines_Toggle" Content="Original Gridlines" Click="ToggleOriginalGridLines_Click"/>
+                        <ToggleButton Name="BasisVectors_Toggle" Content="Basis Vectors" Click="ToggleBasisVectors_Click"/>
                     </StackPanel>
 
                 </GroupBox>
@@ -136,6 +141,7 @@
                     <StackPanel>
                         <Button Content="Add Random Vector" Click="AddRandomVector_ButtonClick"/>
                         <Button Content="Shear" Click="LinearTransformation_ButtonClick"/>
+                        <Button Content="Revert Changes" Click="RevertToOriginal_Click"/>
                     </StackPanel>
                 </GroupBox>
             </StackPanel>

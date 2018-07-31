@@ -46,7 +46,6 @@ namespace VectorMatrixWPF.Models
             set { NotifyPropertyChanged(); _jHat = value; }
         }
 
-        public ObservableCollection<DWLine> BasisVectorLines { get; } = new ObservableCollection<DWLine>();
         public ObservableCollection<DWLine> VectorLines { get; } = new ObservableCollection<DWLine>();
         public ObservableCollection<DWLine> ShownVectorLines { get; } = new ObservableCollection<DWLine>();
 
@@ -96,15 +95,17 @@ namespace VectorMatrixWPF.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         // INIT METHODS
-        public void SetGridSize (int size) => MaxSize = size;
+        public void SetGridSize(int size) => MaxSize = size;
 
         // CANVAS METHODS
-        public void ResizeCanvasElement(object element, RoutedEventArgs e)
+        public void ResizeCanvasElement(object element, RoutedEventArgs e) => ResizeCanvasElement(element);
+
+        public void ResizeCanvasElement(object element)
         {
-            if (element is Canvas canvas)
+            if (element is Canvas plane)
             {
-                CanvasHeight = canvas.ActualHeight;
-                CanvasWidth = canvas.ActualWidth;
+                CanvasHeight = plane.ActualHeight;
+                CanvasWidth = plane.ActualWidth;
                 CanvasXOrigin = CanvasWidth / 2.0;
                 CanvasYOrigin = CanvasHeight / 2.0;
                 UnitLength = CanvasWidth / (MaxSize * 2.0);
@@ -115,91 +116,189 @@ namespace VectorMatrixWPF.Models
             }
         }
 
-        public void DrawGridLines(Canvas canvas)
+        public void ChangeGridLineState(bool activate, bool isOriginal)
         {
+            if (isOriginal)
+            {
+                if (VectorLines.Any(x => x.Type == LineType.GRIDORIG))
+                {
+                    foreach (DWLine gridline in VectorLines.Where(x => x.Type == LineType.GRIDORIG).ToList())
+                    {
+                        if (activate) gridline.IsActive = true;
+                        else gridline.IsActive = false;
+                    }
+                }
+                else
+                    AddOrigGridLines(activate);
+            }
+            else
+            {
+                if (VectorLines.Any(x => x.Type == LineType.GRID))
+                {
+                    foreach (DWLine gridline in VectorLines.Where(x => x.Type == LineType.GRID).ToList())
+                    {
+                        if (activate) gridline.IsActive = true;
+                        else gridline.IsActive = false;
+                    }
+                }
+                else
+                    AddGridLines(activate);
+            }
+        }
+
+        public void AddGridLines(bool isactive = true)
+        {
+            SolidColorBrush color = Brushes.Blue;
+
             for (int i = 0; i <= MaxSize * 2; i++)
             {
-                Line xline = new Line
-                {
-                    Stroke = Brushes.Gray,
-                    StrokeThickness = 0.5,
-                    X1 = UnitLength * i,
-                    Y1 = 0,
-                    X2 = UnitLength * i,
-                    Y2 = CanvasHeight
-                };
+                DWLine xline = new DWLine
+                (
+                    i, 0, LineType.GRID,
+                    new Line
+                    {
+                        Stroke = color,
+                        StrokeThickness = 0.5,
+                        X1 = UnitLength * i,
+                        Y1 = 0,
+                        X2 = UnitLength * i,
+                        Y2 = CanvasHeight
+                    },
+                    isactive
+                );
 
-                Line yline = new Line
-                {
-                    Stroke = Brushes.Gray,
-                    StrokeThickness = 0.5,
-                    X1 = 0,
-                    Y1 = UnitLength * i,
-                    X2 = CanvasWidth,
-                    Y2 = UnitLength * i
-                };
+                DWLine yline = new DWLine
+                (
+                    i, 0, LineType.GRID,
+                    new Line
+                    {
+                        Stroke = color,
+                        StrokeThickness = 0.5,
+                        X1 = 0,
+                        Y1 = UnitLength * i,
+                        X2 = CanvasWidth,
+                        Y2 = UnitLength * i
+                    },
+                    isactive
+                );
 
-                canvas.Children.Add(xline);
-                canvas.Children.Add(yline);
+                VectorLines.Add(xline);
+                VectorLines.Add(yline);
+            }
+        }
+
+        public void AddOrigGridLines(bool isactive = true)
+        {
+            SolidColorBrush color = Brushes.Gray;
+
+            for (int i = 0; i <= MaxSize * 2; i++)
+            {
+                DWLine xline = new DWLine
+                (
+                    i, 0, LineType.GRIDORIG,
+                    new Line
+                    {
+                        Stroke = color,
+                        StrokeThickness = 0.3,
+                        X1 = UnitLength * i,
+                        Y1 = 0,
+                        X2 = UnitLength * i,
+                        Y2 = CanvasHeight
+                    },
+                    isactive
+                );
+
+                DWLine yline = new DWLine
+                (
+                    i, 0, LineType.GRIDORIG,
+                    new Line
+                    {
+                        Stroke = color,
+                        StrokeThickness = 0.3,
+                        X1 = 0,
+                        Y1 = UnitLength * i,
+                        X2 = CanvasWidth,
+                        Y2 = UnitLength * i
+                    },
+                    isactive
+                );
+
+                VectorLines.Add(xline);
+                VectorLines.Add(yline);
             }
         }
 
         // VECTOR METHODS
-        public void ShowAllVectors(Canvas canvas)
+        public void ShowActiveVectorLines(Canvas plane)
         {
-            foreach (DWLine dwline in BasisVectorLines)
-            {
-                if (!canvas.Children.Contains(dwline.Line))
-                    canvas.Children.Add(dwline.Line);
-            }
-
             foreach (DWLine dwline in VectorLines)
             {
-                if (!canvas.Children.Contains(dwline.Line))
-                    canvas.Children.Add(dwline.Line);
+                if (dwline.IsActive)
+                {
+                    if (!plane.Children.Contains(dwline.Line))
+                        plane.Children.Add(dwline.Line);
+                }
+                else
+                    plane.Children.Remove(dwline.Line);
             }
         }
 
-        public void ShowBasisVectors(Canvas canvas)
+        public void AddBasisVectors()
         {
-            if (BasisVectorLines.Count == 0) { 
-                BasisVectorLines.Add(new DWLine
-                (
-                    IHat.X, IHat.Y,
-                    new Line
-                    {
-                        Stroke = Brushes.LightGreen,
-                        StrokeThickness = 2,
-                        X1 = CanvasXOrigin,
-                        Y1 = CanvasYOrigin,
-                        X2 = CanvasXOrigin + (IHat.X * UnitLength),
-                        Y2 = CanvasYOrigin - (IHat.Y * UnitLength)
-                    }
-                ));
+            VectorLines.Add(new DWLine
+            (
+                IHat.X, IHat.Y,
+                LineType.BASE,
+                new Line
+                {
+                    Stroke = Brushes.LightGreen,
+                    StrokeThickness = 2,
+                    X1 = CanvasXOrigin,
+                    Y1 = CanvasYOrigin,
+                    X2 = CanvasXOrigin + (IHat.X * UnitLength),
+                    Y2 = CanvasYOrigin - (IHat.Y * UnitLength)
+                }
+            ));
 
-                BasisVectorLines.Add(new DWLine
-                (
-                    JHat.X, JHat.Y,
-                    new Line { 
-                        Stroke = Brushes.Red,
-                        StrokeThickness = 2,
-                        X1 = CanvasXOrigin,
-                        Y1 = CanvasYOrigin,
-                        X2 = CanvasXOrigin + (JHat.X * UnitLength),
-                        Y2 = CanvasYOrigin - (JHat.Y * UnitLength)
-                    }
-                ));
+            VectorLines.Add(new DWLine
+            (
+                JHat.X, JHat.Y,
+                LineType.BASE,
+                new Line
+                {
+                    Stroke = Brushes.Red,
+                    StrokeThickness = 2,
+                    X1 = CanvasXOrigin,
+                    Y1 = CanvasYOrigin,
+                    X2 = CanvasXOrigin + (JHat.X * UnitLength),
+                    Y2 = CanvasYOrigin - (JHat.Y * UnitLength)
+                }
+            ));
+        }
+
+        public void ActivateBasisVectors()
+        {
+            if (VectorLines.Count(x => x.Type == LineType.BASE) == 0)
+                AddBasisVectors();
+            else
+            {
+                foreach (DWLine dwline in VectorLines)
+                {
+                    if (dwline.Type == LineType.BASE)
+                        dwline.IsActive = true;
+                }
             }
         }
 
-        public void AddVector(Canvas canvas, double x, double y)
+        public void AddVector(double x, double y)
         {
             DWVector vector = VectorMath.GetVectorLocation(IHat, JHat, x, y);
-            
+
             DWLine vectorLine = new DWLine
             (
-                x, y,
-                new Line { 
+                x, y, LineType.VECTOR,
+                new Line
+                {
                     Stroke = PickRandomColor(),
                     X1 = CanvasXOrigin,
                     Y1 = CanvasYOrigin,
@@ -226,30 +325,18 @@ namespace VectorMatrixWPF.Models
 
         public void Rotate90DegreesClockwise()
         {
-            DWMatrix newPlane = VectorMath.Rotate90Clockwise(new DWMatrix(IHat, JHat));
-
-            IHat.X = newPlane.IX;
-            IHat.Y = newPlane.IY;
-            JHat.X = newPlane.JX;
-            JHat.Y = newPlane.JY;
-            UpdateVectorLines();
+            RotateNDegreesAntiClockwise(-90);
         }
 
         public void Rotate90DegreesAntiClockwise()
         {
-            DWMatrix newPlane = VectorMath.Rotate90AntiClockwise(new DWMatrix(IHat, JHat));
-
-            IHat.X = newPlane.IX;
-            IHat.Y = newPlane.IY;
-            JHat.X = newPlane.JX;
-            JHat.Y = newPlane.JY;
-            UpdateVectorLines();
+            RotateNDegreesAntiClockwise(90);
         }
 
         // transformation methods
-        public void TransformPlane(Canvas canvas)
+        public void TransformPlane(DWMatrix matrix)
         {
-            DWMatrix newPlane = VectorMath.LinearTransformation(new DWMatrix(1, 0, 1, 1), new DWMatrix(IHat, JHat));
+            DWMatrix newPlane = VectorMath.LinearTransformation(matrix, new DWMatrix(IHat, JHat));
 
             IHat.X = newPlane.IX;
             IHat.Y = newPlane.IY;
@@ -258,23 +345,26 @@ namespace VectorMatrixWPF.Models
             UpdateVectorLines();
         }
 
+        public void ShearPlane()
+        {
+            TransformPlane(new DWMatrix(1, 0, 1, 1));
+        }
+
+
+        public void RevertToOriginal()
+        {
+            IHat.X = 1;
+            IHat.Y = 0;
+            JHat.X = 0;
+            JHat.Y = 1;
+            UpdateVectorLines();
+        }
 
         // HELPER METHODS
-        private DWVector ConvertPlaneVectorToMathmaticalVector(DWVector vector)
-        {
-            return new DWVector(vector.X / UnitLength, vector.Y / UnitLength);
-        }
-
-        private double TranslatePoint(double point)
-        {
-            return (point * 2) / UnitLength;
-        }
-
         private SolidColorBrush PickRandomColor()
         {
             List<SolidColorBrush> colors = new List<SolidColorBrush>() {
                 Brushes.Red,
-                Brushes.Blue,
                 Brushes.Green,
                 Brushes.Purple,
                 Brushes.Orange,
@@ -287,24 +377,18 @@ namespace VectorMatrixWPF.Models
             return colors[choice];
         }
 
-        private double CheckForOrigin(double val, double multi)
-        {
-            if (val * multi == 0) return CanvasXOrigin;
-            if (val * multi == 0) return CanvasYOrigin;
-            return val * multi;
-        }
-
         private void UpdateVectorLines()
         {
 
-            foreach (DWLine dwline in BasisVectorLines)
+            List<DWLine> gridLines = VectorLines.Where(x => x.Type == LineType.GRID && x.Line.Y1 == 0).ToList();
+
+            for (int i = 0, len = gridLines.Count; i < len; i++)
             {
-                DWVector vector = VectorMath.GetVectorLocation(IHat, JHat, dwline.X, dwline.Y);
-                dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);
-                dwline.Line.Y2 = CanvasYOrigin - (vector.Y * UnitLength);
+                gridLines[i].Line.X1 = i * UnitLength + (UnitLength * IHat.X);
+                gridLines[i].Line.X2 = i * UnitLength - (UnitLength * IHat.Y);
             }
 
-            foreach (DWLine dwline in VectorLines)
+            foreach (DWLine dwline in VectorLines.Where(x => x.Type == LineType.VECTOR || x.Type == LineType.BASE))
             {
                 DWVector vector = VectorMath.GetVectorLocation(IHat, JHat, dwline.X, dwline.Y);
                 dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);

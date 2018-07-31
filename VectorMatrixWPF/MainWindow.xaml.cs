@@ -33,45 +33,76 @@ namespace VectorMatrixWPF
             InitializeComponent();
 
             Grid.SetGridSize(10);
+            ToggleButton tb = new ToggleButton() { IsChecked = false };
+            
 
             DataContext = Grid;
 
-            // resize events
-            Loaded += delegate { Grid.ResizeCanvasElement(Plane, new RoutedEventArgs()); };
-            StateChanged += delegate { Grid.ResizeCanvasElement(Plane, new RoutedEventArgs()); };
-            Plane.SizeChanged += Grid.ResizeCanvasElement;
+            // on load events
+            Loaded += delegate {
+                ToggleGridLines_Click(tb, new RoutedEventArgs());
+                ToggleOriginalGridLines_Click(tb, new RoutedEventArgs());
+                Grid.ResizeCanvasElement(Plane, new RoutedEventArgs());
+            };
+            Plane.SizeChanged += delegate { Grid.ResizeCanvasElement(Plane, new RoutedEventArgs()); };
         }
 
         // CLICK EVENTS
-        
+
         // display
-        private void ShowGridLines_ButtonClick(object sender, RoutedEventArgs e) => Grid.DrawGridLines(Plane);
-        private void ShowBasisVectors_ButtonClick(object sender, RoutedEventArgs e)
+
+        private void ToggleGridLines_Click(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton tb)
             {
                 bool ischecked = tb.IsChecked == true;
 
-                if (ischecked)
-                { 
-                    Grid.ShowBasisVectors(Plane);
-                }
+                if (ischecked) Grid.ChangeGridLineState(true, false);
+                else Grid.ChangeGridLineState(false, false);
+
+                Grid.ShowActiveVectorLines(Plane);
+            }
+        }
+
+        private void ToggleOriginalGridLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is ToggleButton tb)
+            {
+                bool ischecked = tb.IsChecked == true;
+
+                if (ischecked) Grid.ChangeGridLineState(true, true);
+                else Grid.ChangeGridLineState(false, true);
+
+                Grid.ShowActiveVectorLines(Plane);
+            }
+        }
+
+        private void ToggleBasisVectors_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is ToggleButton tb)
+            {
+                bool ischecked = tb.IsChecked == true;
+
+                if (ischecked) Grid.ActivateBasisVectors();
                 else
                 { 
-                    foreach(DWLine dwline in Grid.BasisVectorLines)
+                    foreach(DWLine dwline in Grid.VectorLines.Where(x => x.Type == LineType.BASE))
                     {
-                        Plane.Children.Remove(dwline.Line);
+                        dwline.IsActive = false;
                     }
-                    Grid.BasisVectorLines.Clear();
                 }
             }
             
-            Grid.ShowAllVectors(Plane);
+            Grid.ShowActiveVectorLines(Plane);
         }
+
+        private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.RevertToOriginal();
 
         // rotation
         private void Rotate90_ButtonClick(object sender, RoutedEventArgs e) => Grid.Rotate90DegreesClockwise();
+
         private void Rotate90Anti_ButtonClick(object sender, RoutedEventArgs e) => Grid.Rotate90DegreesAntiClockwise();
+
         private void RotateNAnti_ButtonClick(object sender, RoutedEventArgs e)
         {
             bool canParse = double.TryParse(RotateN_TextBox.Text, out double x);
@@ -89,26 +120,26 @@ namespace VectorMatrixWPF
             bool yParse = double.TryParse(YVector_TextBox.Text, out double y);
 
             if (!xParse || !yParse || x > Grid.MaxSize || x < -Grid.MaxSize || y > Grid.MaxSize || y < -Grid.MaxSize)
-                MessageBox.Show($"Please enter numbers between {-Grid.MaxSize} and {Grid.MaxSize}", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Please enter a number between {-Grid.MaxSize} and {Grid.MaxSize}", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
             else
             {
-                Grid.AddVector(Plane, x, y);
-                Grid.ShowAllVectors(Plane);
+                Grid.AddVector(x, y);
+                Grid.ShowActiveVectorLines(Plane);
             }
         }
 
         private void AddRandomVector_ButtonClick(object sender, RoutedEventArgs e)
         {
             Random rand = new Random(Guid.NewGuid().GetHashCode());
-            Grid.AddVector(Plane, rand.Next(-Grid.MaxSize, Grid.MaxSize + 1), rand.Next(-Grid.MaxSize, Grid.MaxSize + 1));
-            Grid.ShowAllVectors(Plane);
+            Grid.AddVector(rand.Next(-Grid.MaxSize, Grid.MaxSize + 1), rand.Next(-Grid.MaxSize, Grid.MaxSize + 1));
+            Grid.ShowActiveVectorLines(Plane);
         }
 
         // transformation
         private void LinearTransformation_ButtonClick(object sender, RoutedEventArgs e)
         {
-            Grid.TransformPlane(Plane);
-            Grid.ShowAllVectors(Plane);
+            Grid.ShearPlane();
+            //Grid.ShowActiveVectorLines(Plane);
         }
 
     }
