@@ -34,12 +34,13 @@ namespace VectorMatrixWPF
 
             Grid.SetGridSize(10);
             ToggleButton tb = new ToggleButton() { IsChecked = false };
-            
+
 
             DataContext = Grid;
 
             // on load events
-            Loaded += delegate {
+            Loaded += delegate
+            {
                 ToggleGridLines_Click(tb, new RoutedEventArgs());
                 ToggleOriginalGridLines_Click(tb, new RoutedEventArgs());
                 Grid.ResizeCanvasElement(Plane, new RoutedEventArgs());
@@ -50,7 +51,6 @@ namespace VectorMatrixWPF
         // CLICK EVENTS
 
         // display
-
         private void ToggleGridLines_Click(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton tb)
@@ -85,14 +85,14 @@ namespace VectorMatrixWPF
 
                 if (ischecked) Grid.ActivateBasisVectors();
                 else
-                { 
-                    foreach(DWLine dwline in Grid.VectorLines.Where(x => x.Type == LineType.BASE))
+                {
+                    foreach (DWLine dwline in Grid.VectorLines.Where(x => x.Type == LineType.BASE))
                     {
                         dwline.IsActive = false;
                     }
                 }
             }
-            
+
             Grid.ShowActiveVectorLines(Plane);
         }
 
@@ -125,6 +125,8 @@ namespace VectorMatrixWPF
             {
                 Grid.AddVector(x, y);
                 Grid.ShowActiveVectorLines(Plane);
+                XVector_TextBox.Text = "";
+                YVector_TextBox.Text = "";
             }
         }
 
@@ -136,11 +138,52 @@ namespace VectorMatrixWPF
         }
 
         // transformation
+        private void Shear_ButtonClick(object sender, RoutedEventArgs e) => Grid.ShearPlane();
+
         private void LinearTransformation_ButtonClick(object sender, RoutedEventArgs e)
         {
-            Grid.ShearPlane();
-            //Grid.ShowActiveVectorLines(Plane);
+            bool ixParsable = double.TryParse(IXMatrix_TextBox.Text, out double ix);
+            bool iyParsable = double.TryParse(IYMatrix_TextBox.Text, out double iy);
+            bool jxParsable = double.TryParse(JXMatrix_TextBox.Text, out double jx);
+            bool jyParsable = double.TryParse(JYMatrix_TextBox.Text, out double jy);
+
+            if (!ixParsable || !iyParsable || !jxParsable || !jyParsable)
+                MessageBox.Show("Please enter numbers only", "Input Invalid", MessageBoxButton.OK, MessageBoxImage.Error);
+            else
+            {
+                Grid.TransformPlane(new VectorMatrixClassLibrary.DWMatrix(ix, iy, jx, jy));
+                IXMatrix_TextBox.Text = "";
+                IYMatrix_TextBox.Text = "";
+                JXMatrix_TextBox.Text = "";
+                JYMatrix_TextBox.Text = "";
+            }
+
         }
 
+        // contextual enter key-check
+        private void RunButtonContextually_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+                return;
+
+            if (XVector_TextBox.IsKeyboardFocused || YVector_TextBox.IsKeyboardFocused)
+            {
+                AddVector_ButtonClick(new object(), new RoutedEventArgs());
+                Keyboard.Focus(NewVector_Button);
+            }
+
+            if (IXMatrix_TextBox.IsKeyboardFocused || IYMatrix_TextBox.IsKeyboardFocused || JXMatrix_TextBox.IsKeyboardFocused || JYMatrix_TextBox.IsKeyboardFocused)
+            {
+                LinearTransformation_ButtonClick(new object(), new RoutedEventArgs());
+                Keyboard.Focus(NewTransformation_Button);
+            }
+
+            if (RotateN_TextBox.IsKeyboardFocused)
+            {
+                RotateNAnti_ButtonClick(new object(), new RoutedEventArgs());
+                Keyboard.Focus(DegreeNAnticlockwise_Button);
+            }
+
+        }
     }
 }

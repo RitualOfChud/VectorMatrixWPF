@@ -24,7 +24,7 @@ namespace VectorMatrixClassLibrary
 
             return new DWMatrix(ix, iy, jx, jy);
         }
-
+         
         public static DWMatrix RotateNDegreesAntiClockwise(DWMatrix matrix, double angle)
         {
 

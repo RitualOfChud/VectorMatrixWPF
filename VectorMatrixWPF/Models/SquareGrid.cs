@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 
 using VectorMatrixClassLibrary;
-using VectorMatrixWPF.Exceptions;
 
 namespace VectorMatrixWPF.Models
 {
@@ -252,7 +251,7 @@ namespace VectorMatrixWPF.Models
                 new Line
                 {
                     Stroke = Brushes.LightGreen,
-                    StrokeThickness = 2,
+                    StrokeThickness = 3,
                     X1 = CanvasXOrigin,
                     Y1 = CanvasYOrigin,
                     X2 = CanvasXOrigin + (IHat.X * UnitLength),
@@ -267,7 +266,7 @@ namespace VectorMatrixWPF.Models
                 new Line
                 {
                     Stroke = Brushes.Red,
-                    StrokeThickness = 2,
+                    StrokeThickness = 3,
                     X1 = CanvasXOrigin,
                     Y1 = CanvasYOrigin,
                     X2 = CanvasXOrigin + (JHat.X * UnitLength),
