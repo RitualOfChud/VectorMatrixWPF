@@ -177,7 +177,6 @@ namespace VectorMatrixWPF
                 LinearTransformation_ButtonClick(new object(), new RoutedEventArgs());
                 Keyboard.Focus(NewTransformation_Button);
             }
-
             if (RotateN_TextBox.IsKeyboardFocused)
             {
                 RotateNAnti_ButtonClick(new object(), new RoutedEventArgs());

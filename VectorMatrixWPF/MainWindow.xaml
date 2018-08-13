@@ -144,7 +144,7 @@
             </Grid>
 
             <!-- canvas element (with rounded border) -->
-            <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="15" CornerRadius="10" Panel.ZIndex="-1000">
+            <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="10" CornerRadius="10" Panel.ZIndex="-1000">
                 <Canvas Name="Plane" Background="#eee" ClipToBounds="True">
                     <Line Stroke="Black" X1="{Binding CanvasXOrigin}" Y1="0" X2="{Binding CanvasXOrigin}" Y2="{Binding CanvasHeight}"/>
                     <Line Stroke="Black" X1="0" Y1="{Binding CanvasYOrigin}" X2="{Binding CanvasWidth}" Y2="{Binding CanvasYOrigin}"/>
