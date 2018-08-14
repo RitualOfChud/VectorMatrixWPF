@@ -4,8 +4,15 @@ namespace VectorMatrixClassLibrary
 {
     public abstract class VectorMath
     {
-
-        public static DWVector GetVectorLocation(DWVector iHat, DWVector jHat, double x, double y)
+        /// <summary>
+        /// Takes an old X/Y coord and returns a new vector based on the current i-hat & j-hat
+        /// </summary>
+        /// <param name="iHat"></param>
+        /// <param name="jHat"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns>Returns a DWVector with new coords for the current i-hat/j-hat</returns>
+        public static DWVector GetNewVectorLocation(DWVector iHat, DWVector jHat, double x, double y)
         {
             double X = x * iHat.X + y * jHat.X;
             double Y = x * iHat.Y + y * jHat.Y;
@@ -13,49 +20,35 @@ namespace VectorMatrixClassLibrary
             return new DWVector(X, Y);
         }
 
-        public static DWMatrix LinearTransformation(DWMatrix transformMatrix, DWMatrix origMatrix)
+        /// <summary>
+        /// Uses matrix multiplication on a transformation matrix and the current plane
+        /// </summary>
+        /// <param name="transformMatrix">The wanted transformation</param>
+        /// <param name="basisMatrix">The basis vectors in a matrix (i-hat & j-hat)</param>
+        /// <returns>A new matrix giving the new basis vectors</returns>
+        public static DWMatrix LinearTransformation(DWMatrix transformMatrix, DWMatrix basisMatrix)
         {
+            double ix = basisMatrix.IX * transformMatrix.IX + basisMatrix.IY * transformMatrix.JX;
+            double iy = basisMatrix.IX * transformMatrix.IY + basisMatrix.IY * transformMatrix.JY;
 
-            double ix = origMatrix.IX * transformMatrix.IX + origMatrix.IY * transformMatrix.JX;
-            double iy = origMatrix.IX * transformMatrix.IY + origMatrix.IY * transformMatrix.JY;
-
-            double jx = origMatrix.JX * transformMatrix.IX + origMatrix.JY * transformMatrix.JX;
-            double jy = origMatrix.JX * transformMatrix.IY + origMatrix.JY * transformMatrix.JY;
+            double jx = basisMatrix.JX * transformMatrix.IX + basisMatrix.JY * transformMatrix.JX;
+            double jy = basisMatrix.JX * transformMatrix.IY + basisMatrix.JY * transformMatrix.JY;
 
             return new DWMatrix(ix, iy, jx, jy);
         }
-         
-        public static DWMatrix RotateNDegreesAntiClockwise(DWMatrix matrix, double angle)
+        
+        /// <summary>
+        /// Takes the current plane as a matrix and returns a rotated version
+        /// </summary>
+        /// <param name="basisMatrix"></param>
+        /// <param name="radians"></param>
+        /// <returns></returns>
+        public static DWMatrix RotateNRadiansAntiClockwise(DWMatrix basisMatrix, double radians)
         {
-
-            double ix = matrix.IX * Math.Cos(angle) - matrix.IY * Math.Sin(angle);
-            double iy = matrix.IX * Math.Sin(angle) + matrix.IY * Math.Cos(angle);
-            double jx = matrix.JX * Math.Cos(angle) - matrix.JY * Math.Sin(angle);
-            double jy = matrix.JX * Math.Sin(angle) + matrix.JY * Math.Cos(angle);
-
-            return new DWMatrix(ix, iy, jx, jy);
-        }
-
-        public static DWMatrix Rotate90AntiClockwise(DWMatrix matrix)
-        {
-            double tempjx = matrix.JX;
-            double tempjy = matrix.JY;
-            double jx = -matrix.IX;
-            double jy = -matrix.IY;
-            double ix = tempjx;
-            double iy = tempjy;
-
-            return new DWMatrix(ix, iy, jx, jy);
-        }
-
-        public static DWMatrix Rotate90Clockwise (DWMatrix matrix)
-        {
-            double tempix = matrix.IX;
-            double tempiy = matrix.IY;
-            double ix = -matrix.JX;
-            double iy = -matrix.JY;
-            double jx = tempix;
-            double jy = tempiy;
+            double ix = basisMatrix.IX * Math.Cos(radians) - basisMatrix.IY * Math.Sin(radians);
+            double iy = basisMatrix.IX * Math.Sin(radians) + basisMatrix.IY * Math.Cos(radians);
+            double jx = basisMatrix.JX * Math.Cos(radians) - basisMatrix.JY * Math.Sin(radians);
+            double jy = basisMatrix.JX * Math.Sin(radians) + basisMatrix.JY * Math.Cos(radians);
 
             return new DWMatrix(ix, iy, jx, jy);
         }

@@ -9,15 +9,13 @@ using System.Windows.Shapes;
 
 namespace VectorMatrixWPF
 {
-    public class DWLine: INotifyPropertyChanged
+    public class DWLine
     {
         public double X { get; set; }
         public double Y { get; set; }
         public LineType Type { get; set; }
         public Line Line { get; set; } = new Line();
-
-        private bool _isActive = true;
-        public bool IsActive { get { return _isActive; } set { NotifyPropertyChanged(); _isActive = value; } }
+        public bool IsActive { get; set; } = true;
 
         public DWLine(double x, double y, LineType type, Line line, bool active = true)
         {
@@ -27,10 +25,5 @@ namespace VectorMatrixWPF
             Line = line;
             IsActive = active;
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
     }
 }

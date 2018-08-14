@@ -25,33 +25,36 @@ namespace VectorMatrixWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        public SquareGrid Grid = new SquareGrid();
+        /// <summary>
+        /// The viewmodel to be used (holds the properties and functions of view)
+        /// </summary>
+        public SquareGrid Grid = new SquareGrid(10);
 
         public MainWindow()
         {
             InitializeComponent();
-
-            Grid.SetGridSize(10);
-            ToggleButton tb = new ToggleButton() { IsChecked = false };
-
-
             DataContext = Grid;
 
-            // on load events
+            // on load, create the gridlines and initialise canvas elements in view model
+            ToggleButton tb = new ToggleButton() { IsChecked = false }; // set default togglestate to false
             Loaded += delegate
             {
-                ToggleGridLines_Click(tb, new RoutedEventArgs());
-                ToggleOriginalGridLines_Click(tb, new RoutedEventArgs());
-                Grid.ResizeCanvasElement(Plane, new RoutedEventArgs());
+                ToggleDynamicGridLines_Click(tb, new RoutedEventArgs());
+                ToggleStaticGridLines_Click(tb, new RoutedEventArgs());
             };
-            Plane.SizeChanged += delegate { Grid.ResizeCanvasElement(Plane, new RoutedEventArgs()); };
+
+            // on size change, reinitialise the canvas properties
+            Plane.SizeChanged += delegate { Grid.InitialiseCanvasElement(Plane, new RoutedEventArgs()); };
         }
 
-        // CLICK EVENTS
+        // DISPLAY CLICK EVENTS
 
-        // display
-        private void ToggleGridLines_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Toggles the dynamic gridlines on and off, then draws any active vectors on currently on the plane
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ToggleDynamicGridLines_Click(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton tb)
             {
@@ -64,7 +67,12 @@ namespace VectorMatrixWPF
             }
         }
 
-        private void ToggleOriginalGridLines_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Toggles the static gridlines on and off, then draws any active vectors on currently on the plane
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ToggleStaticGridLines_Click(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton tb)
             {
@@ -77,6 +85,11 @@ namespace VectorMatrixWPF
             }
         }
 
+        /// <summary>
+        /// Toggles the basis vectors on and off, then draws any active vectors on currently on the plane
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ToggleBasisVectors_Click(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton tb)
@@ -96,13 +109,28 @@ namespace VectorMatrixWPF
             Grid.ShowActiveVectorLines(Plane);
         }
 
-        private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.RevertToOriginal();
+        // ROTATION CLICK EVENTS
 
-        // rotation
+        /// <summary>
+        /// Rotates the plane 90° clockwise
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Rotate90_ButtonClick(object sender, RoutedEventArgs e) => Grid.Rotate90DegreesClockwise();
 
+        /// <summary>
+        /// Rotates the plane 90° anticlockwise
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Rotate90Anti_ButtonClick(object sender, RoutedEventArgs e) => Grid.Rotate90DegreesAntiClockwise();
 
+        /// <summary>
+        /// Rotates the plane based on user-input
+        /// Displays a messagebox error if input is invalid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RotateNAnti_ButtonClick(object sender, RoutedEventArgs e)
         {
             bool canParse = double.TryParse(RotateN_TextBox.Text, out double x);
@@ -113,7 +141,14 @@ namespace VectorMatrixWPF
                 Grid.RotateNDegreesAntiClockwise(x);
         }
 
-        // vectors
+        // VECTOR CLICK EVENTS
+
+        /// <summary>
+        /// Adds a vector based on user-input
+        /// Displays a messagebox error if input is invalid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AddVector_ButtonClick(object sender, RoutedEventArgs e)
         {
             bool xParse = double.TryParse(XVector_TextBox.Text, out double x);
@@ -130,6 +165,11 @@ namespace VectorMatrixWPF
             }
         }
 
+        /// <summary>
+        /// Adds a random vector to anywhere on the plane
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AddRandomVector_ButtonClick(object sender, RoutedEventArgs e)
         {
             Random rand = new Random(Guid.NewGuid().GetHashCode());
@@ -137,9 +177,21 @@ namespace VectorMatrixWPF
             Grid.ShowActiveVectorLines(Plane);
         }
 
-        // transformation
+        // TRANSFORMATION CLICK EVENTS
+
+        /// <summary>
+        /// Shears the plane to the right
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Shear_ButtonClick(object sender, RoutedEventArgs e) => Grid.ShearPlane();
 
+        /// <summary>
+        /// Performs a linear transformation based on a user-defined matrix
+        /// Shows a messagebox error if the input is invalid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LinearTransformation_ButtonClick(object sender, RoutedEventArgs e)
         {
             bool ixParsable = double.TryParse(IXMatrix_TextBox.Text, out double ix);
@@ -157,11 +209,23 @@ namespace VectorMatrixWPF
                 JXMatrix_TextBox.Text = "";
                 JYMatrix_TextBox.Text = "";
             }
-
         }
 
-        // contextual enter key-check
-        private void RunButtonContextually_KeyUp(object sender, KeyEventArgs e)
+        /// <summary>
+        /// Reverts the plane to standard X/Y coords
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.RevertToOriginal();
+
+        // KEYPRESS EVENTS
+
+        /// <summary>
+        /// On Enter keyup, will check which click-event to fire based on current keyboard focus
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FireButtonContextually_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter)
                 return;

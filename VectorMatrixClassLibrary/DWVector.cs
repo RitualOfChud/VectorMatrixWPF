@@ -6,19 +6,12 @@ using System.Text;
 
 namespace VectorMatrixClassLibrary
 {
-    public class DWVector: INotifyPropertyChanged
+    public class DWVector
     {
-        private double _x;
-        private double _y;
-        public double X { get { return _x; } set { NotifyPropertyChanged(); _x = value; } }
-        public double Y { get { return _y; } set { NotifyPropertyChanged(); _y = value; } }
+        public double X { get; set; }
+        public double Y { get; set; }
 
         public DWVector () { }
         public DWVector (double x, double y) { X = x; Y = y; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
     }
 }

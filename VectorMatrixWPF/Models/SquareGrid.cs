@@ -45,45 +45,16 @@ namespace VectorMatrixWPF.Models
             set { NotifyPropertyChanged(); _jHat = value; }
         }
 
+        // LINE COLLECTIONS 
         public ObservableCollection<DWLine> VectorLines { get; } = new ObservableCollection<DWLine>();
         public ObservableCollection<DWGridLine> GridLines { get; } = new ObservableCollection<DWGridLine>();
-        public ObservableCollection<DWLine> ShownVectorLines { get; } = new ObservableCollection<DWLine>();
 
         // CANVAS PROPERTIES
-        private double _unitLength;
-        public double UnitLength
-        {
-            get { return _unitLength; }
-            set { NotifyPropertyChanged(); _unitLength = value; }
-        }
-
-        private double _canvasHeight;
-        public double CanvasHeight
-        {
-            get { return _canvasHeight; }
-            set { NotifyPropertyChanged(); _canvasHeight = value; }
-        }
-
-        private double _canvasWidth;
-        public double CanvasWidth
-        {
-            get { return _canvasWidth; }
-            set { NotifyPropertyChanged(); _canvasWidth = value; }
-        }
-
-        private double _canvasXOrigin;
-        public double CanvasXOrigin
-        {
-            get { return _canvasXOrigin; }
-            set { NotifyPropertyChanged(); _canvasXOrigin = value; }
-        }
-
-        private double _canvasYOrigin;
-        public double CanvasYOrigin
-        {
-            get { return _canvasYOrigin; }
-            set { NotifyPropertyChanged(); _canvasYOrigin = value; }
-        }
+        public double UnitLength { get; set; }
+        public double CanvasHeight { get; set; }
+        public double CanvasWidth { get; set; }
+        public double CanvasXOrigin { get; set; }
+        public double CanvasYOrigin { get; set; }
 
         /////////////
         // METHODS //
@@ -94,13 +65,16 @@ namespace VectorMatrixWPF.Models
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        // INIT METHODS
-        public void SetGridSize(int size) => MaxSize = size;
-
         // CANVAS METHODS
-        public void ResizeCanvasElement(object element, RoutedEventArgs e) => ResizeCanvasElement(element);
 
-        public void ResizeCanvasElement(object element)
+        /// <summary>
+        /// Sets the canvas properties based on the height/width of the plane being used
+        /// Also sets i-hat and j-hat to regular X Y coords
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="e"></param>
+        public void InitialiseCanvasElement(object element, RoutedEventArgs e) => InitialiseCanvasElement(element);
+        public void InitialiseCanvasElement(object element)
         {
             if (element is Canvas plane)
             {
@@ -116,9 +90,15 @@ namespace VectorMatrixWPF.Models
             }
         }
 
-        public void ChangeGridLineState(bool activate, bool isOriginal)
+        /// <summary>
+        /// Sets whether the gridlines are active or inactive (shown/not shown)
+        /// Can set the state of both the static grid or the dynamic grid using the params
+        /// </summary>
+        /// <param name="activate">Bool: Whether the gridlines should be active or not</param>
+        /// <param name="isStaticGrid">Bool: Whether the grid to be targeted is the static grid or not</param>
+        public void ChangeGridLineState(bool activate, bool isStaticGrid)
         {
-            if (isOriginal)
+            if (isStaticGrid)
             {
                 if (VectorLines.Any(x => x.Type == LineType.GRIDORIG))
                 {
@@ -129,7 +109,7 @@ namespace VectorMatrixWPF.Models
                     }
                 }
                 else
-                    AddOrigGridLines(activate);
+                    AddStaticGridLines(activate);
             }
             else
             {
@@ -142,11 +122,16 @@ namespace VectorMatrixWPF.Models
                     }
                 }
                 else
-                    AddGridLines(activate);
+                    AddDynamicGridLines(activate);
             }
         }
 
-        public void AddGridLines(bool isactive = true)
+        /// <summary>
+        /// Adds the dynamic gridlines to GridLines list
+        /// They are created active as default, but the optional param can set this to false
+        /// </summary>
+        /// <param name="isactive"></param>
+        public void AddDynamicGridLines(bool isactive = true)
         {
             SolidColorBrush color = Brushes.Blue;
 
@@ -189,10 +174,13 @@ namespace VectorMatrixWPF.Models
             }
         }
 
-        public void AddOrigGridLines(bool isactive = true)
+        /// <summary>
+        /// Adds the static gridlines to VectorLines list
+        /// They are created active as default, but the optional param can set this to false
+        /// </summary>
+        /// <param name="isactive"></param>
+        public void AddStaticGridLines(bool isactive = true)
         {
-            SolidColorBrush color = Brushes.Gray;
-
             for (int i = 0; i <= MaxSize * 2; i++)
             {
                 DWLine xline = new DWLine
@@ -200,7 +188,7 @@ namespace VectorMatrixWPF.Models
                     i, 1, LineType.GRIDORIG,
                     new Line
                     {
-                        Stroke = color,
+                        Stroke = Brushes.Gray,
                         StrokeThickness = 0.3,
                         X1 = UnitLength * i,
                         Y1 = 0,
@@ -215,7 +203,7 @@ namespace VectorMatrixWPF.Models
                     1, i, LineType.GRIDORIG,
                     new Line
                     {
-                        Stroke = color,
+                        Stroke = Brushes.Gray,
                         StrokeThickness = 0.3,
                         X1 = 0,
                         Y1 = UnitLength * i,
@@ -231,6 +219,12 @@ namespace VectorMatrixWPF.Models
         }
 
         // VECTOR METHODS
+
+        /// <summary>
+        /// Adds or removes active or inactive lines, respectively, to/from the canvas
+        /// Loops through both DWLines and DWGridLines
+        /// </summary>
+        /// <param name="plane"></param>
         public void ShowActiveVectorLines(Canvas plane)
         {
             foreach (DWLine dwline in VectorLines)
@@ -257,6 +251,9 @@ namespace VectorMatrixWPF.Models
 
         }
 
+        /// <summary>
+        /// Add two basis vector lines (1 i-hat and 1 j-hat) to the VetorLines list
+        /// </summary>
         public void AddBasisVectors()
         {
             VectorLines.Add(new DWLine
@@ -290,6 +287,9 @@ namespace VectorMatrixWPF.Models
             ));
         }
 
+        /// <summary>
+        /// Sets all the basis vectors to active, or creates them if they don't exist
+        /// </summary>
         public void ActivateBasisVectors()
         {
             if (VectorLines.Count(x => x.Type == LineType.BASE) == 0)
@@ -304,9 +304,15 @@ namespace VectorMatrixWPF.Models
             }
         }
 
+        /// <summary>
+        /// Add a Vector to the VectorLines list.
+        /// Each vector has a tooltip and MouseEnter/MouseLeave events
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         public void AddVector(double x, double y)
         {
-            DWVector vector = VectorMath.GetVectorLocation(IHat, JHat, x, y);
+            DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, x, y);
 
             DWLine vectorLine = new DWLine
             (
@@ -321,14 +327,22 @@ namespace VectorMatrixWPF.Models
                 }
             );
 
+            vectorLine.Line.ToolTip = $"X: {vectorLine.X}\nY: {vectorLine.Y}";
+
+            vectorLine.Line.MouseEnter += MouseEnterVectorHighlight;
+            vectorLine.Line.MouseLeave += MouseLeaveVectorHighlight;
+            
             VectorLines.Add(vectorLine);
-            ShownVectorLines.Add(vectorLine);
-            NotifyPropertyChanged("ShownVectorLines");
         }
 
-        public void RotateNDegreesAntiClockwise(double n)
+        /// <summary>
+        /// Calculates a new plane after a rotation (based on VectorMath), then sets the values of i-hat and j-hat to the new plane
+        /// Uses radian conversion to work in a 360 space
+        /// </summary>
+        /// <param name="degrees"></param>
+        public void RotateNDegreesAntiClockwise(double degrees)
         {
-            DWMatrix newPlane = VectorMath.RotateNDegreesAntiClockwise(new DWMatrix(IHat, JHat), ((n * Math.PI) / 180));
+            DWMatrix newPlane = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degrees * Math.PI) / 180));
 
             IHat.X = newPlane.IX;
             IHat.Y = newPlane.IY;
@@ -337,17 +351,23 @@ namespace VectorMatrixWPF.Models
             UpdateVectorLines();
         }
 
-        public void Rotate90DegreesClockwise()
-        {
-            RotateNDegreesAntiClockwise(-90);
-        }
+        /// <summary>
+        /// Calls the RotateNDegreesAntiClockwise with a values of -90
+        /// </summary>
+        public void Rotate90DegreesClockwise() => RotateNDegreesAntiClockwise(-90);
 
-        public void Rotate90DegreesAntiClockwise()
-        {
-            RotateNDegreesAntiClockwise(90);
-        }
+        /// <summary>
+        /// Calls the RotateNDegreesAntiClockwise with a values of 90
+        /// </summary>
+        public void Rotate90DegreesAntiClockwise() => RotateNDegreesAntiClockwise(90);
 
-        // transformation methods
+        // TRANSFORMATION METHODS
+
+        /// <summary>
+        /// Takes a matrix to perform a linear transformation
+        /// Sets the values of i-hat and j-hat based on this transformation matrix (matrix multiplication)
+        /// </summary>
+        /// <param name="matrix"></param>
         public void TransformPlane(DWMatrix matrix)
         {
             DWMatrix newPlane = VectorMath.LinearTransformation(matrix, new DWMatrix(IHat, JHat));
@@ -359,12 +379,14 @@ namespace VectorMatrixWPF.Models
             UpdateVectorLines();
         }
 
-        public void ShearPlane()
-        {
-            TransformPlane(new DWMatrix(1, 0, 1, 1));
-        }
+        /// <summary>
+        /// Shears the plane (sets x of j-hat to 1)
+        /// </summary>
+        public void ShearPlane() => TransformPlane(new DWMatrix(1, 0, 1, 1));
 
-
+        /// <summary>
+        /// Reset the i-hat and j-hat values back to their default state and informs all vectors
+        /// </summary>
         public void RevertToOriginal()
         {
             IHat.X = 1;
@@ -374,7 +396,12 @@ namespace VectorMatrixWPF.Models
             UpdateVectorLines();
         }
 
-        // HELPER METHODS
+        // PRIVATE HELPER METHODS
+
+        /// <summary>
+        /// Picks a random colour from a set collection of 5 different colours
+        /// </summary>
+        /// <returns>Returns a SoldColorBrush colour from the set list</returns>
         private SolidColorBrush PickRandomColor()
         {
             List<SolidColorBrush> colors = new List<SolidColorBrush>() {
@@ -391,14 +418,17 @@ namespace VectorMatrixWPF.Models
             return colors[choice];
         }
 
+        /// <summary>
+        /// Gets the current vector location of each dynamic gridline line (start and end) and each vector
+        /// This is based on the current i-hat and j-hat values
+        /// Used to get correct vectors after linear transformations
+        /// </summary>
         private void UpdateVectorLines()
         {
-            //List<DWGridLine> xgridLines = GridLines.Where(x => x.DWLine.Line.Y1 == 0).ToList();
-
             foreach (DWGridLine gridline in GridLines)
             {
-                DWVector vector1 = VectorMath.GetVectorLocation(IHat, JHat, gridline.Vector1.X, gridline.Vector1.Y);
-                DWVector vector2 = VectorMath.GetVectorLocation(IHat, JHat, gridline.Vector2.X, gridline.Vector2.Y);
+                DWVector vector1 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector1.X, gridline.Vector1.Y);
+                DWVector vector2 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector2.X, gridline.Vector2.Y);
 
                 gridline.DWLine.Line.X1 = CanvasXOrigin + (vector1.X * UnitLength);
                 gridline.DWLine.Line.Y1 = CanvasYOrigin - (vector1.Y * UnitLength);
@@ -409,10 +439,34 @@ namespace VectorMatrixWPF.Models
 
             foreach (DWLine dwline in VectorLines.Where(x => x.Type == LineType.VECTOR || x.Type == LineType.BASE))
             {
-                DWVector vector = VectorMath.GetVectorLocation(IHat, JHat, dwline.X, dwline.Y);
+                DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, dwline.X, dwline.Y);
                 dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);
                 dwline.Line.Y2 = CanvasYOrigin - (vector.Y * UnitLength);
             }
+        }
+
+        // VECTOR LINE MOUSE EVENTS
+
+        /// <summary>
+        /// Thickens the vector line if the mouse is over it
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseEnterVectorHighlight(object sender, RoutedEventArgs e)
+        {
+            if (sender is Line line)
+                line.StrokeThickness = 3;
+        }
+
+        /// <summary>
+        /// Returns vector line thickness to normal when mouse is not over it
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseLeaveVectorHighlight(object sender, RoutedEventArgs e)
+        {
+            if (sender is Line line)
+                line.StrokeThickness = 1;
         }
 
     }
