@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,15 +12,16 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 
 using VectorMatrixClassLibrary;
+using VectorMatrixWPF.Models;
 
-namespace VectorMatrixWPF.Models
+namespace VectorMatrixWPF.ViewModels
 {
     public class SquareGrid : INotifyPropertyChanged
     {
-        //////////////////
-        // CONSTRUCTORS //
-        //////////////////
-        
+        /////////////////
+        // CONSTRUCTOR //
+        /////////////////
+
         public SquareGrid() { }
         public SquareGrid(int maxGridSize) { MaxSize = maxGridSize; }
 
@@ -57,14 +56,6 @@ namespace VectorMatrixWPF.Models
         public double CanvasWidth { get; set; }
         public double CanvasXOrigin { get; set; }
         public double CanvasYOrigin { get; set; }
-
-        // ANIMATION PROPERTIES
-        private int _animationSpeed = 180;
-        public int AnimationSpeed
-        {
-            get { return _animationSpeed; }
-            set { _animationSpeed = value; NotifyPropertyChanged(); }
-        }
 
         /////////////
         // METHODS //
@@ -346,57 +337,33 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Animates the rotation based on the animation speed
-        /// </summary>
-        /// <param name="degree"></param>
-        public void AnimateRotation(double degree)
-        {
-            // factor the speed to make animation speed more consistent
-            double factor = 1;
-            if (degree > 180)   factor = 1.5;
-            if (degree > 225)   factor = 1.75;
-            if (degree > 270)   factor = 2;
-            if (degree > 315)   factor = 2.25;
-            if (degree < 135)   factor = 0.75;
-            if (degree < 90)    factor = 0.5;
-
-            for (int i = 0; i < AnimationSpeed * factor; i++)
-            {
-                Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
-                {
-                    RotateNDegreesAntiClockwise(degree / (AnimationSpeed * factor));
-                    Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    Thread.Sleep(1);
-                }));
-            }
-        }
-
-        /// <summary>
         /// Calculates a new plane after a rotation (based on VectorMath), then sets the values of i-hat and j-hat to the new plane
         /// Uses radian conversion to work in a 360 space
         /// </summary>
         /// <param name="degrees"></param>
         public void RotateNDegreesAntiClockwise(double degrees)
         {
-            DWMatrix newPlane = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degrees * Math.PI) / 180));
+            for (int i = 0; i < 5; i++)
+            {
+                DWMatrix newPlane = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degrees / 5 * Math.PI) / 180));
 
-            IHat.X = newPlane.IX;
-            IHat.Y = newPlane.IY;
-            JHat.X = newPlane.JX;
-            JHat.Y = newPlane.JY;
-
-            UpdateVectorLines();
+                IHat.X = newPlane.IX;
+                IHat.Y = newPlane.IY;
+                JHat.X = newPlane.JX;
+                JHat.Y = newPlane.JY;
+                Task<Action>.Run(() => UpdateVectorLines()).Wait();
+            }
         }
 
         /// <summary>
         /// Calls the RotateNDegreesAntiClockwise with a values of -90
         /// </summary>
-        public void Rotate90DegreesClockwise() => AnimateRotation(-90);
+        public void Rotate90DegreesClockwise() => RotateNDegreesAntiClockwise(-90);
 
         /// <summary>
         /// Calls the RotateNDegreesAntiClockwise with a values of 90
         /// </summary>
-        public void Rotate90DegreesAntiClockwise() => AnimateRotation(90);
+        public void Rotate90DegreesAntiClockwise() => RotateNDegreesAntiClockwise(90);
 
         // TRANSFORMATION METHODS
 

@@ -138,7 +138,7 @@ namespace VectorMatrixWPF
             if (!canParse)
                 MessageBox.Show("Please enter a number", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
             else
-                Grid.RotateNDegreesAntiClockwise(x);
+                Grid.AnimateRotation(x);
         }
 
         // VECTOR CLICK EVENTS
