@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,15 +14,14 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 
 using VectorMatrixClassLibrary;
-using VectorMatrixWPF.Models;
 
-namespace VectorMatrixWPF.ViewModels
+namespace VectorMatrixWPF.Models
 {
     public class SquareGrid : INotifyPropertyChanged
     {
-        /////////////////
-        // CONSTRUCTOR //
-        /////////////////
+        //////////////////
+        // CONSTRUCTORS //
+        //////////////////
 
         public SquareGrid() { }
         public SquareGrid(int maxGridSize) { MaxSize = maxGridSize; }
@@ -36,14 +37,14 @@ namespace VectorMatrixWPF.ViewModels
         public DWVector IHat
         {
             get { return _iHat; }
-            set { NotifyPropertyChanged(); _iHat = value; }
+            set { _iHat = value; NotifyPropertyChanged(); }
         }
 
         private DWVector _jHat = new DWVector();
         public DWVector JHat
         {
             get { return _jHat; }
-            set { NotifyPropertyChanged(); _jHat = value; }
+            set { _jHat = value; NotifyPropertyChanged(); }
         }
 
         // LINE COLLECTIONS 
@@ -56,6 +57,28 @@ namespace VectorMatrixWPF.ViewModels
         public double CanvasWidth { get; set; }
         public double CanvasXOrigin { get; set; }
         public double CanvasYOrigin { get; set; }
+
+        // ANIMATION PROPERTIES
+
+        public bool AnimationEnabled { get; set; } = true;
+
+        public Dictionary<string, double> Speeds { get; set; }
+            = new Dictionary<string, double>()
+            {
+                { "Very Slow", 5 },
+                { "Slow", 3 },
+                { "Normal", 1 },
+                { "Fast", .75 },
+                { "Very Fast", .5 }
+            };
+
+        private const int ANIMATIONBASESPEED = 180;
+        private double _animationFactor = 1;
+        public double AnimationFactor
+        {
+            get { return _animationFactor; }
+            set { _animationFactor = value; NotifyPropertyChanged(); }
+        }
 
         /////////////
         // METHODS //
@@ -337,33 +360,58 @@ namespace VectorMatrixWPF.ViewModels
         }
 
         /// <summary>
+        /// Animates the rotation based on the animation speed
+        /// </summary>
+        /// <param name="degree"></param>
+        public void AnimateRotation(double degree)
+        {
+            // jump to full rotation if animation is off
+            if (!AnimationEnabled)
+            {
+                RotateNDegreesAntiClockwise(degree);
+            }
+            else
+            {
+                // rotates a part of the way and then re-renders
+                Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
+                {
+                    for (int i = 0; i < ANIMATIONBASESPEED * AnimationFactor; i++)
+                    {
+
+                        RotateNDegreesAntiClockwise(degree / (ANIMATIONBASESPEED * AnimationFactor));
+                        Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                        Thread.Sleep(1);
+                    }
+                }));
+            }
+        }
+
+        /// <summary>
         /// Calculates a new plane after a rotation (based on VectorMath), then sets the values of i-hat and j-hat to the new plane
         /// Uses radian conversion to work in a 360 space
         /// </summary>
         /// <param name="degrees"></param>
         public void RotateNDegreesAntiClockwise(double degrees)
         {
-            for (int i = 0; i < 5; i++)
-            {
-                DWMatrix newPlane = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degrees / 5 * Math.PI) / 180));
+            DWMatrix newPlane = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degrees * Math.PI) / 180));
 
-                IHat.X = newPlane.IX;
-                IHat.Y = newPlane.IY;
-                JHat.X = newPlane.JX;
-                JHat.Y = newPlane.JY;
-                Task<Action>.Run(() => UpdateVectorLines()).Wait();
-            }
+            IHat.X = newPlane.IX;
+            IHat.Y = newPlane.IY;
+            JHat.X = newPlane.JX;
+            JHat.Y = newPlane.JY;
+
+            UpdateVectorLines();
         }
 
         /// <summary>
         /// Calls the RotateNDegreesAntiClockwise with a values of -90
         /// </summary>
-        public void Rotate90DegreesClockwise() => RotateNDegreesAntiClockwise(-90);
+        public void Rotate90DegreesClockwise() => AnimateRotation(-90);
 
         /// <summary>
         /// Calls the RotateNDegreesAntiClockwise with a values of 90
         /// </summary>
-        public void Rotate90DegreesAntiClockwise() => RotateNDegreesAntiClockwise(90);
+        public void Rotate90DegreesAntiClockwise() => AnimateRotation(90);
 
         // TRANSFORMATION METHODS
 
