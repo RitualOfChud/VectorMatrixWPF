@@ -18,7 +18,7 @@ using System.Windows.Shapes;
 
 using VectorMatrixWPF.Models;
 
-namespace VectorMatrixWPF
+namespace VectorMatrixWPF 
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -218,6 +218,12 @@ namespace VectorMatrixWPF
         /// <param name="e"></param>
         private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.RevertToOriginal();
 
+        private void ChangeAnimationFactor_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            string selected = ChangeSpeed_ComboBox.SelectedValue.ToString();
+            Grid.AnimationFactor = Grid.Speeds[selected];
+        }
+        
         // KEYPRESS EVENTS
 
         /// <summary>

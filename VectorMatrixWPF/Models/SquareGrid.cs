@@ -22,7 +22,7 @@ namespace VectorMatrixWPF.Models
         //////////////////
         // CONSTRUCTORS //
         //////////////////
-        
+
         public SquareGrid() { }
         public SquareGrid(int maxGridSize) { MaxSize = maxGridSize; }
 
@@ -37,14 +37,14 @@ namespace VectorMatrixWPF.Models
         public DWVector IHat
         {
             get { return _iHat; }
-            set { NotifyPropertyChanged(); _iHat = value; }
+            set { _iHat = value; NotifyPropertyChanged(); }
         }
 
         private DWVector _jHat = new DWVector();
         public DWVector JHat
         {
             get { return _jHat; }
-            set { NotifyPropertyChanged(); _jHat = value; }
+            set { _jHat = value; NotifyPropertyChanged(); }
         }
 
         // LINE COLLECTIONS 
@@ -59,11 +59,25 @@ namespace VectorMatrixWPF.Models
         public double CanvasYOrigin { get; set; }
 
         // ANIMATION PROPERTIES
-        private int _animationSpeed = 180;
-        public int AnimationSpeed
+
+        public bool AnimationEnabled { get; set; } = true;
+
+        public Dictionary<string, double> Speeds { get; set; }
+            = new Dictionary<string, double>()
+            {
+                { "Very Slow", 5 },
+                { "Slow", 3 },
+                { "Normal", 1 },
+                { "Fast", .75 },
+                { "Very Fast", .5 }
+            };
+
+        private const int ANIMATIONBASESPEED = 180;
+        private double _animationFactor = 1;
+        public double AnimationFactor
         {
-            get { return _animationSpeed; }
-            set { _animationSpeed = value; NotifyPropertyChanged(); }
+            get { return _animationFactor; }
+            set { _animationFactor = value; NotifyPropertyChanged(); }
         }
 
         /////////////
@@ -351,22 +365,23 @@ namespace VectorMatrixWPF.Models
         /// <param name="degree"></param>
         public void AnimateRotation(double degree)
         {
-            // factor the speed to make animation speed more consistent
-            double factor = 1;
-            if (degree > 180)   factor = 1.5;
-            if (degree > 225)   factor = 1.75;
-            if (degree > 270)   factor = 2;
-            if (degree > 315)   factor = 2.25;
-            if (degree < 135)   factor = 0.75;
-            if (degree < 90)    factor = 0.5;
-
-            for (int i = 0; i < AnimationSpeed * factor; i++)
+            // jump to full rotation if animation is off
+            if (!AnimationEnabled)
             {
+                RotateNDegreesAntiClockwise(degree);
+            }
+            else
+            {
+                // rotates a part of the way and then re-renders
                 Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
                 {
-                    RotateNDegreesAntiClockwise(degree / (AnimationSpeed * factor));
-                    Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
-                    Thread.Sleep(1);
+                    for (int i = 0; i < ANIMATIONBASESPEED * AnimationFactor; i++)
+                    {
+
+                        RotateNDegreesAntiClockwise(degree / (ANIMATIONBASESPEED * AnimationFactor));
+                        Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                        Thread.Sleep(1);
+                    }
                 }));
             }
         }

@@ -104,7 +104,7 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <Label Grid.Column="0" Content="New Vector" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="15" Padding="5"/>
+                    <Label Grid.Column="0" Content="New Vector" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="14" Padding="10 5 5 5"/>
                     <TextBlock Grid.Column="1" Text="x" VerticalAlignment="Center" Padding="10"/>
                     <TextBox Grid.Column="2" Name="XVector_TextBox" Width="60" Padding="5" VerticalAlignment="Center" HorizontalContentAlignment="Center"/>
                     <TextBlock Grid.Column="3" Text="y" VerticalAlignment="Center" Padding="10" Foreground="DarkBlue"/>
@@ -124,7 +124,7 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="New Transformation" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="15" Padding="5"/>
+                    <Label Grid.Column="0" Content="New Transformation" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="14" Padding="10 5 5 5"/>
                     <!-- i-hat -->
                     <StackPanel Grid.Column="2" Orientation="Vertical" Margin="5 0 5 0">
                             <TextBlock Text="&#xCE;x" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="3" Foreground="Green"/>
@@ -184,6 +184,41 @@
                         <Line Margin="7"></Line>
                         <Button Content="90° Anticlockwise" Click="Rotate90Anti_ButtonClick"/>
                         <Button Content="90° Clockwise" Click="Rotate90_ButtonClick"/>
+                    </StackPanel>
+                </GroupBox>
+                
+                <!-- animation options -->
+                <GroupBox>
+                    <GroupBox.Header>Animation</GroupBox.Header>
+
+                    <StackPanel>
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="Enabled:" VerticalContentAlignment="Center"/>
+                            <CheckBox Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding AnimationEnabled, Mode=TwoWay}" />
+
+                        </Grid>
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="Speed:" VerticalContentAlignment="Center"/>
+                            <ComboBox Grid.Column="1" Name="ChangeSpeed_ComboBox"
+                                      ItemsSource="{Binding Speeds}"
+                                      SelectedValuePath="Key"
+                                      DisplayMemberPath="Key" Width="Auto"
+                                      SelectedIndex="2"
+                                      SelectionChanged="ChangeAnimationFactor_SelectionChanged">
+                            </ComboBox>
+                        </Grid>
                     </StackPanel>
                 </GroupBox>
 
