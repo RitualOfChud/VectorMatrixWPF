@@ -212,6 +212,7 @@
 
                             <Label Grid.Column="0" Content="Speed:" VerticalContentAlignment="Center"/>
                             <ComboBox Grid.Column="1" Name="ChangeSpeed_ComboBox"
+                                      VerticalContentAlignment="Center"
                                       ItemsSource="{Binding Speeds}"
                                       SelectedValuePath="Key"
                                       DisplayMemberPath="Key" Width="Auto"

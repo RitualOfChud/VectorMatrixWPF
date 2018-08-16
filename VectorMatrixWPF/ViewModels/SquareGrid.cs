@@ -14,8 +14,9 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 
 using VectorMatrixClassLibrary;
+using VectorMatrixWPF.Models;
 
-namespace VectorMatrixWPF.Models
+namespace VectorMatrixWPF.ViewModels
 {
     public class SquareGrid : INotifyPropertyChanged
     {
@@ -92,7 +93,7 @@ namespace VectorMatrixWPF.Models
         // CANVAS METHODS
 
         /// <summary>
-        /// Sets the canvas properties based on the height/width of the plane being used
+        /// Sets the canvas properties based on the height/width of the plane being used.
         /// Also sets i-hat and j-hat to regular X Y coords
         /// </summary>
         /// <param name="element"></param>
@@ -115,7 +116,7 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Sets whether the gridlines are active or inactive (shown/not shown)
+        /// Sets whether the gridlines are active or inactive (shown/not shown).
         /// Can set the state of both the static grid or the dynamic grid using the params
         /// </summary>
         /// <param name="activate">Bool: Whether the gridlines should be active or not</param>
@@ -151,7 +152,7 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Adds the dynamic gridlines to GridLines list
+        /// Adds the dynamic gridlines to GridLines list.
         /// They are created active as default, but the optional param can set this to false
         /// </summary>
         /// <param name="isactive"></param>
@@ -199,7 +200,7 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Adds the static gridlines to VectorLines list
+        /// Adds the static gridlines to VectorLines list.
         /// They are created active as default, but the optional param can set this to false
         /// </summary>
         /// <param name="isactive"></param>
@@ -245,7 +246,7 @@ namespace VectorMatrixWPF.Models
         // VECTOR METHODS
 
         /// <summary>
-        /// Adds or removes active or inactive lines, respectively, to/from the canvas
+        /// Adds or removes active or inactive lines, respectively, to/from the canvas.
         /// Loops through both DWLines and DWGridLines
         /// </summary>
         /// <param name="plane"></param>
@@ -387,7 +388,7 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Calculates a new plane after a rotation (based on VectorMath), then sets the values of i-hat and j-hat to the new plane
+        /// Calculates a new plane after a rotation (based on VectorMath), then sets the values of i-hat and j-hat to the new plane.
         /// Uses radian conversion to work in a 360 space
         /// </summary>
         /// <param name="degrees"></param>
@@ -416,7 +417,41 @@ namespace VectorMatrixWPF.Models
         // TRANSFORMATION METHODS
 
         /// <summary>
-        /// Takes a matrix to perform a linear transformation
+        /// Animates the linear transformation if animations enabled
+        /// </summary>
+        /// <param name="currentMatrix"></param>
+        /// <param name="targetMatrix"></param>
+        /// <param name="stepMatrix"></param>
+        public void AnimateTransformation(DWMatrix currentMatrix, DWMatrix targetMatrix, DWMatrix stepMatrix = null)
+        {
+            if (!AnimationEnabled) TransformPlane(targetMatrix);
+
+            else
+            {
+                stepMatrix = stepMatrix ?? (targetMatrix - currentMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
+                Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
+                {
+                    for (int i = 0; i < (ANIMATIONBASESPEED * AnimationFactor); i++)
+                    {
+                        DWMatrix newPlane = currentMatrix + stepMatrix;
+
+                        IHat.X = newPlane.IX;
+                        IHat.Y = newPlane.IY;
+                        JHat.X = newPlane.JX;
+                        JHat.Y = newPlane.JY;
+                        UpdateVectorLines();
+
+                        Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                        Thread.Sleep(1);
+                        currentMatrix = newPlane;
+                    }
+                }));
+            }
+
+        }
+
+        /// <summary>
+        /// Takes a matrix to perform a linear transformation.
         /// Sets the values of i-hat and j-hat based on this transformation matrix (matrix multiplication)
         /// </summary>
         /// <param name="matrix"></param>
@@ -439,14 +474,8 @@ namespace VectorMatrixWPF.Models
         /// <summary>
         /// Reset the i-hat and j-hat values back to their default state and informs all vectors
         /// </summary>
-        public void RevertToOriginal()
-        {
-            IHat.X = 1;
-            IHat.Y = 0;
-            JHat.X = 0;
-            JHat.Y = 1;
-            UpdateVectorLines();
-        }
+        public void RevertToOriginal() =>
+            AnimateTransformation(currentMatrix: new DWMatrix(IHat.X, IHat.Y, JHat.X, JHat.Y), targetMatrix: new DWMatrix(1, 0, 0, 1));
 
         // PRIVATE HELPER METHODS
 
@@ -471,8 +500,8 @@ namespace VectorMatrixWPF.Models
         }
 
         /// <summary>
-        /// Gets the current vector location of each dynamic gridline line (start and end) and each vector
-        /// This is based on the current i-hat and j-hat values
+        /// Gets the current vector location of each dynamic gridline line (start and end) and each vector.
+        /// This is based on the current i-hat and j-hat values.
         /// Used to get correct vectors after linear transformations
         /// </summary>
         private void UpdateVectorLines()
