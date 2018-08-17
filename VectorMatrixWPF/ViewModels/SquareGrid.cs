@@ -54,7 +54,7 @@ namespace VectorMatrixWPF.ViewModels
 
         // TRANSFORMATION STORAGE
         /// <summary>
-        /// Stores information about each transformation. i1: Initial Plane, i2: New Plane, i3: Inverse Matrix
+        /// Stores information about each transformation. i1: Initial Plane, i2: New Plane, i3: Inverse Matrix, i4: Degrees
         /// </summary>
         public ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>> LinearTransformationsList
             = new ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>>();
@@ -448,6 +448,10 @@ namespace VectorMatrixWPF.ViewModels
         {
             DWMatrix transformedTarget = VectorMath.MakeLinearTransformation(currentMatrix, targetMatrix);
 
+            LinearTransformationsList.Add(
+                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, transformedTarget, VectorMath.GetInverseMatrix(targetMatrix), 0)
+            );
+
             if (!AnimationEnabled) TransformPlane(transformedTarget);
 
             else
@@ -471,9 +475,7 @@ namespace VectorMatrixWPF.ViewModels
                     }
                 }));
             }
-            LinearTransformationsList.Add(
-                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, targetMatrix, VectorMath.GetInverseMatrix(targetMatrix), 0)
-                );
+            
         }
 
         /// <summary>
@@ -482,8 +484,9 @@ namespace VectorMatrixWPF.ViewModels
         /// <param name="initMatrix"></param>
         /// <param name="transformedMatrix"></param>
         /// <param name="inverseMatrix"></param>
-        public void AnimateInversion(DWMatrix initMatrix, DWMatrix transformedMatrix, DWMatrix inverseMatrix)
+        public void AnimateInversion(DWMatrix initMatrix, DWMatrix transformedMatrix)
         {
+
             if (!AnimationEnabled)
             {
                 IHat.X = initMatrix.IX;
@@ -547,7 +550,7 @@ namespace VectorMatrixWPF.ViewModels
                 var lastItem = LinearTransformationsList.Last();
 
                 if (lastItem.Item4 == 0)
-                    AnimateInversion(lastItem.Item1, lastItem.Item2, lastItem.Item3);
+                    AnimateInversion(lastItem.Item1, lastItem.Item2);
                 else
                     AnimateRotation(-lastItem.Item4, true);
 
