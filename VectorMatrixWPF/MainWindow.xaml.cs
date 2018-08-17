@@ -218,7 +218,7 @@ namespace VectorMatrixWPF
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.RevertToOriginal();
+        private void RevertToOriginal_Click(object sender, RoutedEventArgs e) => Grid.UndoLastTransformation();
 
         private void ChangeAnimationFactor_SelectionChanged(object sender, RoutedEventArgs e)
         {

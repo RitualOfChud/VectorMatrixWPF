@@ -52,6 +52,13 @@ namespace VectorMatrixWPF.ViewModels
         public ObservableCollection<DWLine> VectorLines { get; } = new ObservableCollection<DWLine>();
         public ObservableCollection<DWGridLine> GridLines { get; } = new ObservableCollection<DWGridLine>();
 
+        // TRANSFORMATION STORAGE
+        /// <summary>
+        /// Stores information about each transformation. i1: Initial Plane, i2: New Plane, i3: Inverse Matrix
+        /// </summary>
+        public ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>> LinearTransformationsList
+            = new ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>>();
+
         // CANVAS PROPERTIES
         public double UnitLength { get; set; }
         public double CanvasHeight { get; set; }
@@ -361,11 +368,22 @@ namespace VectorMatrixWPF.ViewModels
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public void InvertPlane()
+        {
+
+        }
+
+        /// <summary>
         /// Animates the rotation based on the animation speed
         /// </summary>
         /// <param name="degree"></param>
-        public void AnimateRotation(double degree)
+        public void AnimateRotation(double degree, bool undo = false)
         {
+            DWMatrix currentMatrix = new DWMatrix(IHat.X, IHat.Y, JHat.X, JHat.Y);
+            DWMatrix targetMatrix = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degree * Math.PI) / 180));
+
             // jump to full rotation if animation is off
             if (!AnimationEnabled)
             {
@@ -378,13 +396,17 @@ namespace VectorMatrixWPF.ViewModels
                 {
                     for (int i = 0; i < ANIMATIONBASESPEED * AnimationFactor; i++)
                     {
-
                         RotateNDegreesAntiClockwise(degree / (ANIMATIONBASESPEED * AnimationFactor));
                         Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                         Thread.Sleep(1);
                     }
                 }));
+                
             }
+            
+            if (!undo) LinearTransformationsList.Add(
+                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, targetMatrix, VectorMath.GetInverseMatrix(targetMatrix), degree)
+            );
         }
 
         /// <summary>
@@ -422,13 +444,15 @@ namespace VectorMatrixWPF.ViewModels
         /// <param name="currentMatrix"></param>
         /// <param name="targetMatrix"></param>
         /// <param name="stepMatrix"></param>
-        public void AnimateTransformation(DWMatrix currentMatrix, DWMatrix targetMatrix, DWMatrix stepMatrix = null)
+        public void AnimateTransformation(DWMatrix currentMatrix, DWMatrix targetMatrix)
         {
-            if (!AnimationEnabled) TransformPlane(targetMatrix);
+            DWMatrix transformedTarget = VectorMath.MakeLinearTransformation(currentMatrix, targetMatrix);
+
+            if (!AnimationEnabled) TransformPlane(transformedTarget);
 
             else
             {
-                stepMatrix = stepMatrix ?? (targetMatrix - currentMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
+                DWMatrix stepMatrix = (transformedTarget - currentMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
                 Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
                 {
                     for (int i = 0; i < (ANIMATIONBASESPEED * AnimationFactor); i++)
@@ -447,6 +471,49 @@ namespace VectorMatrixWPF.ViewModels
                     }
                 }));
             }
+            LinearTransformationsList.Add(
+                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, targetMatrix, VectorMath.GetInverseMatrix(targetMatrix), 0)
+                );
+        }
+
+        /// <summary>
+        /// Animates the inversion of a transformation
+        /// </summary>
+        /// <param name="initMatrix"></param>
+        /// <param name="transformedMatrix"></param>
+        /// <param name="inverseMatrix"></param>
+        public void AnimateInversion(DWMatrix initMatrix, DWMatrix transformedMatrix, DWMatrix inverseMatrix)
+        {
+            if (!AnimationEnabled)
+            {
+                IHat.X = initMatrix.IX;
+                IHat.Y = initMatrix.IY;
+                JHat.X = initMatrix.JX;
+                JHat.Y = initMatrix.JY;
+                UpdateVectorLines();
+            }
+
+            else
+            {
+                DWMatrix stepMatrix = (initMatrix - transformedMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
+                Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
+                {
+                    for (int i = 0; i < (ANIMATIONBASESPEED * AnimationFactor); i++)
+                    {
+                        DWMatrix newPlane = transformedMatrix + stepMatrix;
+
+                        IHat.X = newPlane.IX;
+                        IHat.Y = newPlane.IY;
+                        JHat.X = newPlane.JX;
+                        JHat.Y = newPlane.JY;
+                        UpdateVectorLines();
+
+                        Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                        Thread.Sleep(1);
+                        transformedMatrix = newPlane;
+                    }
+                }));
+            }
 
         }
 
@@ -457,7 +524,7 @@ namespace VectorMatrixWPF.ViewModels
         /// <param name="matrix"></param>
         public void TransformPlane(DWMatrix matrix)
         {
-            DWMatrix newPlane = VectorMath.LinearTransformation(matrix, new DWMatrix(IHat, JHat));
+            DWMatrix newPlane = VectorMath.MakeLinearTransformation(matrix, new DWMatrix(IHat, JHat));
 
             IHat.X = newPlane.IX;
             IHat.Y = newPlane.IY;
@@ -469,13 +536,25 @@ namespace VectorMatrixWPF.ViewModels
         /// <summary>
         /// Shears the plane (sets x of j-hat to 1)
         /// </summary>
-        public void ShearPlane() => TransformPlane(new DWMatrix(1, 0, 1, 1));
+        public void ShearPlane() => AnimateTransformation(new DWMatrix(IHat.X, IHat.Y, JHat.X, JHat.Y), new DWMatrix(1, 0, 1, 1));
 
         /// <summary>
         /// Reset the i-hat and j-hat values back to their default state and informs all vectors
         /// </summary>
-        public void RevertToOriginal() =>
-            AnimateTransformation(currentMatrix: new DWMatrix(IHat.X, IHat.Y, JHat.X, JHat.Y), targetMatrix: new DWMatrix(1, 0, 0, 1));
+        public void UndoLastTransformation() { 
+            if (LinearTransformationsList.Count != 0) {
+
+                var lastItem = LinearTransformationsList.Last();
+
+                if (lastItem.Item4 == 0)
+                    AnimateInversion(lastItem.Item1, lastItem.Item2, lastItem.Item3);
+                else
+                    AnimateRotation(-lastItem.Item4, true);
+
+                LinearTransformationsList.Remove(LinearTransformationsList.Last());
+
+            }
+        }
 
         // PRIVATE HELPER METHODS
 

@@ -21,12 +21,35 @@ namespace VectorMatrixClassLibrary
         }
 
         /// <summary>
+        /// Gets the determinant value of a given matrix
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns>The determinant value of a matrix</returns>
+        public static double GetDeterminant(DWMatrix m) => (m.IX * m.JY) - (m.JX * m.IY);
+        
+        /// <summary>
+        /// Get the inverse matrix of a given matrix
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns>The inverse DWMatrix</returns>
+        public static DWMatrix GetInverseMatrix(DWMatrix m)
+        {
+            double ix = m.JY;
+            double iy = -m.IY;
+            double jx = -m.JX;
+            double jy = m.IX;
+
+            DWMatrix newMatrix = new DWMatrix(ix, iy, jx, jy);
+            return newMatrix / GetDeterminant(newMatrix);
+        }
+
+        /// <summary>
         /// Uses matrix multiplication on a transformation matrix and the current plane
         /// </summary>
         /// <param name="transformMatrix">The wanted transformation</param>
         /// <param name="basisMatrix">The basis vectors in a matrix (i-hat & j-hat)</param>
         /// <returns>A new matrix giving the new basis vectors</returns>
-        public static DWMatrix LinearTransformation(DWMatrix transformMatrix, DWMatrix basisMatrix)
+        public static DWMatrix MakeLinearTransformation(DWMatrix transformMatrix, DWMatrix basisMatrix)
         {
             double ix = basisMatrix.IX * transformMatrix.IX + basisMatrix.IY * transformMatrix.JX;
             double iy = basisMatrix.IX * transformMatrix.IY + basisMatrix.IY * transformMatrix.JY;

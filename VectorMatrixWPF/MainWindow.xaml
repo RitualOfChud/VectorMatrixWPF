@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Vectors &amp; Matrices"
         WindowStartupLocation="CenterScreen"
-        Height="673" Width="650" MinHeight="400" MinWidth="400"
+        Height="824.5" Width="955" MinHeight="400" MinWidth="400"
         ResizeMode="NoResize" KeyUp="FireButtonContextually_KeyUp">
 
     <Window.Resources>
@@ -73,17 +73,20 @@
         <Grid>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="3*"/> <!-- Canvas -->
+                <ColumnDefinition Width="1*"/> <!-- Options -->
+                <ColumnDefinition Width="2*"/> <!-- Inversion -->
             </Grid.ColumnDefinitions>
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="3*"/>
+                <RowDefinition Height="1*"/> <!-- Options -->
+                <RowDefinition Height="3*"/> <!-- Canvas -->
+                <RowDefinition Height="1*"/> <!-- Vectors -->
             </Grid.RowDefinitions>
 
-            <!-- pretty border -->
-            <Rectangle Grid.ColumnSpan="2" Grid.RowSpan="2" Stroke="Black" StrokeThickness=".5" RadiusX="10" RadiusY="10" Panel.ZIndex="100"/>
+            <!--CANVAS & OPTIONS PART -->
+            <!-- border -->
+            <Border Grid.ColumnSpan="2" Grid.RowSpan="2" BorderBrush="Black" BorderThickness=".5 .5 .16 .16" CornerRadius="10 0 0 0" Panel.ZIndex="100"/>
 
             <Grid Grid.Column="0" Grid.Row="0">
 
@@ -143,8 +146,8 @@
                 </Grid>
             </Grid>
 
-            <!-- canvas element (with rounded border) -->
-            <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="10" CornerRadius="10" Panel.ZIndex="-1000">
+            <!-- canvas element -->
+            <Border Grid.Column="0" Grid.Row="1" Background="#eee" Padding="10 5 10 10" Panel.ZIndex="-1000" Margin="0 5 0 0">
                 <Canvas Name="Plane" Background="#eee" ClipToBounds="True">
                     <Line Stroke="Black" X1="{Binding CanvasXOrigin}" Y1="0" X2="{Binding CanvasXOrigin}" Y2="{Binding CanvasHeight}"/>
                     <Line Stroke="Black" X1="0" Y1="{Binding CanvasYOrigin}" X2="{Binding CanvasWidth}" Y2="{Binding CanvasYOrigin}"/>
@@ -165,28 +168,6 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- rotation buttons -->
-                <GroupBox>
-                    <GroupBox.Header>Rotation</GroupBox.Header>
-
-                    <StackPanel>
-                        <Grid>
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="3*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Label Grid.Column="0" Content="Degrees:" VerticalContentAlignment="Center"/>
-                            <TextBox Grid.Column="1" Name="RotateN_TextBox" Margin="5" Padding="5" VerticalAlignment="Center" HorizontalContentAlignment="Center" Width="Auto"/>
-                        </Grid>
-                        <Button Name="DegreeNAnticlockwise_Button" Content="Anticlockwise" Click="RotateNAnti_ButtonClick"/>
-                        <Line Margin="7"></Line>
-                        <Button Content="90° Anticlockwise" Click="Rotate90Anti_ButtonClick"/>
-                        <Button Content="90° Clockwise" Click="Rotate90_ButtonClick"/>
-                    </StackPanel>
-                </GroupBox>
-                
                 <!-- animation options -->
                 <GroupBox>
                     <GroupBox.Header>Animation</GroupBox.Header>
@@ -222,17 +203,48 @@
                         </Grid>
                     </StackPanel>
                 </GroupBox>
+                
+                <!-- rotation buttons -->
+                <GroupBox>
+                    <GroupBox.Header>Rotation</GroupBox.Header>
 
+                    <StackPanel>
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="Degrees:" VerticalContentAlignment="Center"/>
+                            <TextBox Grid.Column="1" Name="RotateN_TextBox" Margin="5" Padding="5" VerticalAlignment="Center" HorizontalContentAlignment="Center" Width="Auto"/>
+                        </Grid>
+                        <Button Name="DegreeNAnticlockwise_Button" Content="Anticlockwise" Click="RotateNAnti_ButtonClick"/>
+                        <Line Margin="7"></Line>
+                        <Button Content="90° Anticlockwise" Click="Rotate90Anti_ButtonClick"/>
+                        <Button Content="90° Clockwise" Click="Rotate90_ButtonClick"/>
+                    </StackPanel>
+                </GroupBox>
+                
                 <!-- additional option buttons -->
                 <GroupBox>
                     <GroupBox.Header>Other</GroupBox.Header>
                     <StackPanel>
-                        <Button Content="Add Random Vector" Click="AddRandomVector_ButtonClick"/>
+                        <Button Content="Random Vector" Click="AddRandomVector_ButtonClick"/>
                         <Button Content="Shear" Click="Shear_ButtonClick"/>
-                        <Button Content="Revert Changes" Click="RevertToOriginal_Click"/>
+                        <Button Content="Undo" Click="RevertToOriginal_Click"/>
                     </StackPanel>
                 </GroupBox>
             </StackPanel>
+
+            <!-- INVERSION PART -->
+            <!-- border -->
+            <Border Grid.Column="2" Grid.RowSpan="3" BorderBrush="Black" BorderThickness=".16 .5 .5 .5" CornerRadius="0 10 10 0" Panel.ZIndex="100" Background="#22ffffcc"/>
+
+            <!-- VECTORLIST PART -->
+            <!-- border -->
+            <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="Black" BorderThickness=".5 .16 .16 .5" CornerRadius="0 0 0 10" Panel.ZIndex="100" Background="#22ffccff"/>
+
         </Grid>
     </Border>
 </Window>
