@@ -162,8 +162,8 @@
 
                     <!-- display toggle buttons -->
                     <StackPanel>
-                        <ToggleButton Name="GridLines_Toggle" Content="Dynamic Gridlines" Click="ToggleDynamicGridLines_Click"/>
-                        <ToggleButton Name="DefaultGridLines_Toggle" Content="Static Gridlines" Click="ToggleStaticGridLines_Click"/>
+                        <ToggleButton Name="GridLines_Toggle" Content="Dynamic Grid" Click="ToggleDynamicGridLines_Click"/>
+                        <ToggleButton Name="DefaultGridLines_Toggle" Content="Static Grid" Click="ToggleStaticGridLines_Click"/>
                         <ToggleButton Name="BasisVectors_Toggle" Content="Basis Vectors" Click="ToggleBasisVectors_Click"/>
                     </StackPanel>
                 </GroupBox>

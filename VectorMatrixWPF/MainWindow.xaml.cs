@@ -42,6 +42,7 @@ namespace VectorMatrixWPF
             {
                 ToggleDynamicGridLines_Click(tb, new RoutedEventArgs());
                 ToggleStaticGridLines_Click(tb, new RoutedEventArgs());
+                Grid.ActivateBasisVectors(false);
             };
 
             // on size change, reinitialise the canvas properties
@@ -97,14 +98,8 @@ namespace VectorMatrixWPF
             {
                 bool ischecked = tb.IsChecked == true;
 
-                if (ischecked) Grid.ActivateBasisVectors();
-                else
-                {
-                    foreach (DWLine dwline in Grid.BasisVectors)
-                    {
-                        dwline.IsActive = false;
-                    }
-                }
+                if (ischecked) Grid.ActivateBasisVectors(true);
+                else Grid.ActivateBasisVectors(false);
             }
 
             Grid.ShowActiveLines(Plane);

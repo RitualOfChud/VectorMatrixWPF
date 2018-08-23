@@ -323,15 +323,23 @@ namespace VectorMatrixWPF.ViewModels
         /// <summary>
         /// Sets all the basis vectors to active, or creates them if they don't exist
         /// </summary>
-        public void ActivateBasisVectors()
+        public void ActivateBasisVectors(bool active)
         {
             if (BasisVectors.Count == 0)
                 AddBasisVectors();
-            else
+            
+            if (active)
+            {
+                foreach (DWLine dWLine in BasisVectors)
+                {
+                    dWLine.IsActive = true;
+                }
+            }
+            else 
             {
                 foreach (DWLine dwline in BasisVectors)
                 {
-                    dwline.IsActive = true;
+                    dwline.IsActive = false;
                 }
             }
         }
