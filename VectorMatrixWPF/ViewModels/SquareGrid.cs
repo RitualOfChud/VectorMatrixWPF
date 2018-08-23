@@ -49,8 +49,10 @@ namespace VectorMatrixWPF.ViewModels
         }
 
         // LINE COLLECTIONS 
+        public ObservableCollection<DWLine> BasisVectors { get; } = new ObservableCollection<DWLine>();
         public ObservableCollection<DWLine> VectorLines { get; } = new ObservableCollection<DWLine>();
-        public ObservableCollection<DWGridLine> GridLines { get; } = new ObservableCollection<DWGridLine>();
+        public ObservableCollection<DWLine> StaticGridLines { get; } = new ObservableCollection<DWLine>();
+        public ObservableCollection<DWGridLine> DynamicGridLines { get; } = new ObservableCollection<DWGridLine>();
 
         // TRANSFORMATION STORAGE
         /// <summary>
@@ -94,7 +96,7 @@ namespace VectorMatrixWPF.ViewModels
 
         // PROPERTY CHANGED IMPLEMENTATION
         public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") =>
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         // CANVAS METHODS
@@ -132,9 +134,9 @@ namespace VectorMatrixWPF.ViewModels
         {
             if (isStaticGrid)
             {
-                if (VectorLines.Any(x => x.Type == LineType.GRIDORIG))
+                if (StaticGridLines.Count > 0)
                 {
-                    foreach (DWLine gridline in VectorLines.Where(x => x.Type == LineType.GRIDORIG).ToList())
+                    foreach (DWLine gridline in StaticGridLines)
                     {
                         if (activate) gridline.IsActive = true;
                         else gridline.IsActive = false;
@@ -145,9 +147,9 @@ namespace VectorMatrixWPF.ViewModels
             }
             else
             {
-                if (GridLines.Count > 0)
+                if (DynamicGridLines.Count > 0)
                 {
-                    foreach (DWGridLine gridline in GridLines)
+                    foreach (DWGridLine gridline in DynamicGridLines)
                     {
                         if (activate) gridline.DWLine.IsActive = true;
                         else gridline.DWLine.IsActive = false;
@@ -182,6 +184,7 @@ namespace VectorMatrixWPF.ViewModels
                             X2 = UnitLength * i,
                             Y2 = CanvasHeight
                         },
+                        color,
                         isactive
                     ));
 
@@ -198,11 +201,12 @@ namespace VectorMatrixWPF.ViewModels
                             X2 = CanvasWidth,
                             Y2 = UnitLength * i
                         },
+                        color,
                         isactive
                     ));
 
-                GridLines.Add(xline);
-                GridLines.Add(yline);
+                DynamicGridLines.Add(xline);
+                DynamicGridLines.Add(yline);
             }
         }
 
@@ -213,6 +217,7 @@ namespace VectorMatrixWPF.ViewModels
         /// <param name="isactive"></param>
         public void AddStaticGridLines(bool isactive = true)
         {
+            SolidColorBrush color = Brushes.Gray;
             for (int i = 0; i <= MaxSize * 2; i++)
             {
                 DWLine xline = new DWLine
@@ -220,13 +225,14 @@ namespace VectorMatrixWPF.ViewModels
                     i, 1, LineType.GRIDORIG,
                     new Line
                     {
-                        Stroke = Brushes.Gray,
+                        Stroke = color,
                         StrokeThickness = 0.3,
                         X1 = UnitLength * i,
                         Y1 = 0,
                         X2 = UnitLength * i,
                         Y2 = CanvasHeight
                     },
+                    color,
                     isactive
                 );
 
@@ -235,18 +241,19 @@ namespace VectorMatrixWPF.ViewModels
                     1, i, LineType.GRIDORIG,
                     new Line
                     {
-                        Stroke = Brushes.Gray,
+                        Stroke = color,
                         StrokeThickness = 0.3,
                         X1 = 0,
                         Y1 = UnitLength * i,
                         X2 = CanvasWidth,
                         Y2 = UnitLength * i
                     },
+                    color,
                     isactive
                 );
 
-                VectorLines.Add(xline);
-                VectorLines.Add(yline);
+                StaticGridLines.Add(xline);
+                StaticGridLines.Add(yline);
             }
         }
 
@@ -257,9 +264,15 @@ namespace VectorMatrixWPF.ViewModels
         /// Loops through both DWLines and DWGridLines
         /// </summary>
         /// <param name="plane"></param>
-        public void ShowActiveVectorLines(Canvas plane)
+        public void ShowActiveLines(Canvas plane)
         {
-            foreach (DWLine dwline in VectorLines)
+            List<DWLine> dwlines = new List<DWLine>();
+            dwlines.AddRange(VectorLines);
+            dwlines.AddRange(StaticGridLines);
+            dwlines.AddRange(BasisVectors);
+            dwlines.AddRange(DynamicGridLines.Select(x => x.DWLine));
+
+            foreach (DWLine dwline in dwlines)
             {
                 if (dwline.IsActive)
                 {
@@ -269,18 +282,6 @@ namespace VectorMatrixWPF.ViewModels
                 else
                     plane.Children.Remove(dwline.Line);
             }
-
-            foreach (DWGridLine gridline in GridLines)
-            {
-                if (gridline.DWLine.IsActive)
-                {
-                    if (!plane.Children.Contains(gridline.DWLine.Line))
-                        plane.Children.Add(gridline.DWLine.Line);
-                }
-                else
-                    plane.Children.Remove(gridline.DWLine.Line);
-            }
-
         }
 
         /// <summary>
@@ -288,7 +289,7 @@ namespace VectorMatrixWPF.ViewModels
         /// </summary>
         public void AddBasisVectors()
         {
-            VectorLines.Add(new DWLine
+            BasisVectors.Add(new DWLine
             (
                 IHat.X, IHat.Y,
                 LineType.BASE,
@@ -300,10 +301,10 @@ namespace VectorMatrixWPF.ViewModels
                     Y1 = CanvasYOrigin,
                     X2 = CanvasXOrigin + (IHat.X * UnitLength),
                     Y2 = CanvasYOrigin - (IHat.Y * UnitLength)
-                }
+                }, Brushes.LightGreen
             ));
 
-            VectorLines.Add(new DWLine
+            BasisVectors.Add(new DWLine
             (
                 JHat.X, JHat.Y,
                 LineType.BASE,
@@ -315,7 +316,7 @@ namespace VectorMatrixWPF.ViewModels
                     Y1 = CanvasYOrigin,
                     X2 = CanvasXOrigin + (JHat.X * UnitLength),
                     Y2 = CanvasYOrigin - (JHat.Y * UnitLength)
-                }
+                }, Brushes.Red
             ));
         }
 
@@ -324,14 +325,13 @@ namespace VectorMatrixWPF.ViewModels
         /// </summary>
         public void ActivateBasisVectors()
         {
-            if (VectorLines.Count(x => x.Type == LineType.BASE) == 0)
+            if (BasisVectors.Count == 0)
                 AddBasisVectors();
             else
             {
-                foreach (DWLine dwline in VectorLines)
+                foreach (DWLine dwline in BasisVectors)
                 {
-                    if (dwline.Type == LineType.BASE)
-                        dwline.IsActive = true;
+                    dwline.IsActive = true;
                 }
             }
         }
@@ -345,18 +345,19 @@ namespace VectorMatrixWPF.ViewModels
         public void AddVector(double x, double y)
         {
             DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, x, y);
+            SolidColorBrush color = PickRandomColor();
 
             DWLine vectorLine = new DWLine
             (
                 x, y, LineType.VECTOR,
                 new Line
                 {
-                    Stroke = PickRandomColor(),
+                    Stroke = color,
                     X1 = CanvasXOrigin,
                     Y1 = CanvasYOrigin,
                     X2 = CanvasXOrigin + (vector.X * UnitLength),
                     Y2 = CanvasYOrigin - (vector.Y * UnitLength)
-                }
+                }, color
             );
 
             vectorLine.Line.ToolTip = $"X: {vectorLine.X}\nY: {vectorLine.Y}";
@@ -588,7 +589,7 @@ namespace VectorMatrixWPF.ViewModels
         /// </summary>
         private void UpdateVectorLines()
         {
-            foreach (DWGridLine gridline in GridLines)
+            foreach (DWGridLine gridline in DynamicGridLines)
             {
                 DWVector vector1 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector1.X, gridline.Vector1.Y);
                 DWVector vector2 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector2.X, gridline.Vector2.Y);
@@ -600,7 +601,14 @@ namespace VectorMatrixWPF.ViewModels
                 gridline.DWLine.Line.Y2 = CanvasYOrigin - (vector2.Y * UnitLength);
             }
 
-            foreach (DWLine dwline in VectorLines.Where(x => x.Type == LineType.VECTOR || x.Type == LineType.BASE))
+            foreach (DWLine dwline in VectorLines.Where(x => x.Type == LineType.VECTOR))
+            {
+                DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, dwline.X, dwline.Y);
+                dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);
+                dwline.Line.Y2 = CanvasYOrigin - (vector.Y * UnitLength);
+            }
+
+            foreach (DWLine dwline in BasisVectors)
             {
                 DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, dwline.X, dwline.Y);
                 dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);

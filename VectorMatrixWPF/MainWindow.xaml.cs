@@ -64,7 +64,7 @@ namespace VectorMatrixWPF
                 if (ischecked) Grid.ChangeGridLineState(true, false);
                 else Grid.ChangeGridLineState(false, false);
 
-                Grid.ShowActiveVectorLines(Plane);
+                Grid.ShowActiveLines(Plane);
             }
         }
 
@@ -82,7 +82,7 @@ namespace VectorMatrixWPF
                 if (ischecked) Grid.ChangeGridLineState(true, true);
                 else Grid.ChangeGridLineState(false, true);
 
-                Grid.ShowActiveVectorLines(Plane);
+                Grid.ShowActiveLines(Plane);
             }
         }
 
@@ -100,14 +100,14 @@ namespace VectorMatrixWPF
                 if (ischecked) Grid.ActivateBasisVectors();
                 else
                 {
-                    foreach (DWLine dwline in Grid.VectorLines.Where(x => x.Type == LineType.BASE))
+                    foreach (DWLine dwline in Grid.BasisVectors)
                     {
                         dwline.IsActive = false;
                     }
                 }
             }
 
-            Grid.ShowActiveVectorLines(Plane);
+            Grid.ShowActiveLines(Plane);
         }
 
         // ROTATION CLICK EVENTS
@@ -160,9 +160,11 @@ namespace VectorMatrixWPF
             else
             {
                 Grid.AddVector(x, y);
-                Grid.ShowActiveVectorLines(Plane);
+                Grid.ShowActiveLines(Plane);
                 XVector_TextBox.Text = "";
                 YVector_TextBox.Text = "";
+                VectorList_ListView.SelectedIndex = VectorList_ListView.Items.Count - 1;
+                VectorList_ListView.ScrollIntoView(VectorList_ListView.SelectedItem);
             }
         }
 
@@ -175,7 +177,9 @@ namespace VectorMatrixWPF
         {
             Random rand = new Random(Guid.NewGuid().GetHashCode());
             Grid.AddVector(rand.Next(-Grid.MaxSize, Grid.MaxSize + 1), rand.Next(-Grid.MaxSize, Grid.MaxSize + 1));
-            Grid.ShowActiveVectorLines(Plane);
+            Grid.ShowActiveLines(Plane);
+            VectorList_ListView.SelectedIndex = VectorList_ListView.Items.Count - 1;
+            VectorList_ListView.ScrollIntoView(VectorList_ListView.SelectedItem);
         }
 
         // TRANSFORMATION CLICK EVENTS

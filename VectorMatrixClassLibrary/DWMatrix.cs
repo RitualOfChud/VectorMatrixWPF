@@ -30,6 +30,15 @@ namespace VectorMatrixClassLibrary
             JY = jhat.Y;
         }
 
+        ///////////////////////
+        // TOSTRING OVERLOAD //
+        ///////////////////////
+
+        public string ToSring()
+        {
+            return $"{IX} | {JX}\n{IY} | {JY}";
+        }
+
         //////////////////////////
         // OPERATOR OVERLOADING //
         //////////////////////////
