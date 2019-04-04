@@ -31,64 +31,31 @@ namespace VectorMatrixWPF.ViewModels
         // MEMBERS & PROPERTIES //
         //////////////////////////
 
+        // MODEL INSTANCES
+        public static Animation Animation { get; } = new Animation(true);
+
         // MATHMATICAL PROPERTIES
         public int MaxSize { get; set; } = 10;
 
-        private DWVector _iHat = new DWVector();
-        public DWVector IHat
-        {
-            get { return _iHat; }
-            set { _iHat = value; NotifyPropertyChanged(); }
-        }
-
-        private DWVector _jHat = new DWVector();
-        public DWVector JHat
-        {
-            get { return _jHat; }
-            set { _jHat = value; NotifyPropertyChanged(); }
-        }
+        private DWVector IHat { get; set; } = new DWVector();
+        private DWVector JHat { get; set; } = new DWVector();
 
         // LINE COLLECTIONS 
-        public ObservableCollection<DWLine> BasisVectors { get; } = new ObservableCollection<DWLine>();
-        public ObservableCollection<DWLine> VectorLines { get; } = new ObservableCollection<DWLine>();
-        public ObservableCollection<DWLine> StaticGridLines { get; } = new ObservableCollection<DWLine>();
-        public ObservableCollection<DWGridLine> DynamicGridLines { get; } = new ObservableCollection<DWGridLine>();
+        private ObservableCollection<DWLine> _basisVectors = new ObservableCollection<DWLine>();
+        private ObservableCollection<DWLine> _vectorLines = new ObservableCollection<DWLine>();
+        private ObservableCollection<DWGridLine> _dynamicGridLines = new ObservableCollection<DWGridLine>();
 
-        // TRANSFORMATION STORAGE
-        /// <summary>
-        /// Stores information about each transformation. i1: Initial Plane, i2: New Plane, i3: Inverse Matrix, i4: Degrees
-        /// </summary>
-        public ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>> LinearTransformationsList
-            = new ObservableCollection<Tuple<DWMatrix, DWMatrix, DWMatrix, double>>();
+        public ObservableCollection<DWLine> BasisVectors => _basisVectors;
+        public ObservableCollection<DWLine> VectorLines => _vectorLines;
+        public ObservableCollection<DWGridLine> DynamicGridLines => _dynamicGridLines;
+        public ObservableCollection<DWLine> StaticGridLines { get; } = new ObservableCollection<DWLine>();
 
         // CANVAS PROPERTIES
-        public double UnitLength { get; set; }
-        public double CanvasHeight { get; set; }
-        public double CanvasWidth { get; set; }
+        public double UnitLength    { get; set; }
+        public double CanvasHeight  { get; set; }
+        public double CanvasWidth   { get; set; }
         public double CanvasXOrigin { get; set; }
         public double CanvasYOrigin { get; set; }
-
-        // ANIMATION PROPERTIES
-
-        public bool AnimationEnabled { get; set; } = true;
-
-        public Dictionary<string, double> Speeds { get; set; }
-            = new Dictionary<string, double>()
-            {
-                { "Very Slow", 5 },
-                { "Slow", 3 },
-                { "Normal", 1 },
-                { "Fast", .75 },
-                { "Very Fast", .5 }
-            };
-
-        private const int ANIMATIONBASESPEED = 180;
-        private double _animationFactor = 1;
-        public double AnimationFactor
-        {
-            get { return _animationFactor; }
-            set { _animationFactor = value; NotifyPropertyChanged(); }
-        }
 
         /////////////
         // METHODS //
@@ -101,13 +68,18 @@ namespace VectorMatrixWPF.ViewModels
 
         // CANVAS METHODS
 
+        public void ChangeAnimationFactor(string factor) =>
+            Animation.AnimationFactor = Animation.Speeds[factor];
+
         /// <summary>
         /// Sets the canvas properties based on the height/width of the plane being used.
         /// Also sets i-hat and j-hat to regular X Y coords
         /// </summary>
         /// <param name="element"></param>
         /// <param name="e"></param>
-        public void InitialiseCanvasElement(object element, RoutedEventArgs e) => InitialiseCanvasElement(element);
+        public void InitialiseCanvasElement(object element, RoutedEventArgs e) =>
+            InitialiseCanvasElement(element);
+
         public void InitialiseCanvasElement(object element)
         {
             if (element is Canvas plane)
@@ -125,7 +97,7 @@ namespace VectorMatrixWPF.ViewModels
         }
 
         /// <summary>
-        /// Sets whether the gridlines are active or inactive (shown/not shown).
+        /// Sets whether the gridlines are shown (active) or not.
         /// Can set the state of both the static grid or the dynamic grid using the params
         /// </summary>
         /// <param name="activate">Bool: Whether the gridlines should be active or not</param>
@@ -327,7 +299,7 @@ namespace VectorMatrixWPF.ViewModels
         {
             if (BasisVectors.Count == 0)
                 AddBasisVectors();
-            
+
             if (active)
             {
                 foreach (DWLine dWLine in BasisVectors)
@@ -335,7 +307,7 @@ namespace VectorMatrixWPF.ViewModels
                     dWLine.IsActive = true;
                 }
             }
-            else 
+            else
             {
                 foreach (DWLine dwline in BasisVectors)
                 {
@@ -377,14 +349,6 @@ namespace VectorMatrixWPF.ViewModels
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public void InvertPlane()
-        {
-
-        }
-
-        /// <summary>
         /// Animates the rotation based on the animation speed
         /// </summary>
         /// <param name="degree"></param>
@@ -394,7 +358,7 @@ namespace VectorMatrixWPF.ViewModels
             DWMatrix targetMatrix = VectorMath.RotateNRadiansAntiClockwise(new DWMatrix(IHat, JHat), ((degree * Math.PI) / 180));
 
             // jump to full rotation if animation is off
-            if (!AnimationEnabled)
+            if (!Animation.AnimationEnabled)
             {
                 RotateNDegreesAntiClockwise(degree);
             }
@@ -403,18 +367,18 @@ namespace VectorMatrixWPF.ViewModels
                 // rotates a part of the way and then re-renders
                 Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
                 {
-                    for (int i = 0; i < ANIMATIONBASESPEED * AnimationFactor; i++)
+                    for (int i = 0; i < Animation.GetFactoredSpeed(); i++)
                     {
-                        RotateNDegreesAntiClockwise(degree / (ANIMATIONBASESPEED * AnimationFactor));
+                        RotateNDegreesAntiClockwise(degree / (Animation.GetFactoredSpeed()));
                         Application.Current.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                         Thread.Sleep(1);
                     }
                 }));
-                
+
             }
-            
-            if (!undo) LinearTransformationsList.Add(
-                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, targetMatrix, VectorMath.GetInverseMatrix(targetMatrix), degree)
+
+            if (!undo) Animation.TransformationsList.Add(
+                new Transformation(currentMatrix, targetMatrix, VectorMath.GetInverseMatrix(targetMatrix), degree)
             );
         }
 
@@ -457,18 +421,18 @@ namespace VectorMatrixWPF.ViewModels
         {
             DWMatrix transformedTarget = VectorMath.MakeLinearTransformation(currentMatrix, targetMatrix);
 
-            LinearTransformationsList.Add(
-                new Tuple<DWMatrix, DWMatrix, DWMatrix, double>(currentMatrix, transformedTarget, VectorMath.GetInverseMatrix(targetMatrix), 0)
+            Animation.TransformationsList.Add(
+                new Transformation(currentMatrix, transformedTarget, VectorMath.GetInverseMatrix(targetMatrix), 0)
             );
 
-            if (!AnimationEnabled) TransformPlane(transformedTarget);
+            if (!Animation.AnimationEnabled) TransformPlane(transformedTarget);
 
             else
             {
-                DWMatrix stepMatrix = (transformedTarget - currentMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
+                DWMatrix stepMatrix = (transformedTarget - currentMatrix) / (Animation.GetFactoredSpeed());
                 Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
                 {
-                    for (int i = 0; i < (ANIMATIONBASESPEED * AnimationFactor); i++)
+                    for (int i = 0; i < (Animation.GetFactoredSpeed()); i++)
                     {
                         DWMatrix newPlane = currentMatrix + stepMatrix;
 
@@ -484,8 +448,13 @@ namespace VectorMatrixWPF.ViewModels
                     }
                 }));
             }
-            
         }
+        
+        public void AnimateTransformation(double ix, double iy, double jx, double jy) =>
+            AnimateTransformation(
+                new DWMatrix(IHat.X, IHat.Y, JHat.X, JHat.Y),
+                new DWMatrix(ix, iy, jx, jy)
+            );
 
         /// <summary>
         /// Animates the inversion of a transformation
@@ -496,7 +465,7 @@ namespace VectorMatrixWPF.ViewModels
         public void AnimateInversion(DWMatrix initMatrix, DWMatrix transformedMatrix)
         {
 
-            if (!AnimationEnabled)
+            if (!Animation.AnimationEnabled)
             {
                 IHat.X = initMatrix.IX;
                 IHat.Y = initMatrix.IY;
@@ -507,10 +476,10 @@ namespace VectorMatrixWPF.ViewModels
 
             else
             {
-                DWMatrix stepMatrix = (initMatrix - transformedMatrix) / (ANIMATIONBASESPEED * AnimationFactor);
+                DWMatrix stepMatrix = (initMatrix - transformedMatrix) / (Animation.GetFactoredSpeed());
                 Task.Run(() => Application.Current.Dispatcher.Invoke(() =>
                 {
-                    for (int i = 0; i < (ANIMATIONBASESPEED * AnimationFactor); i++)
+                    for (int i = 0; i < (Animation.GetFactoredSpeed()); i++)
                     {
                         DWMatrix newPlane = transformedMatrix + stepMatrix;
 
@@ -553,17 +522,19 @@ namespace VectorMatrixWPF.ViewModels
         /// <summary>
         /// Reset the i-hat and j-hat values back to their default state and informs all vectors
         /// </summary>
-        public void UndoLastTransformation() { 
-            if (LinearTransformationsList.Count != 0) {
+        public void UndoLastTransformation()
+        {
+            if (Animation.TransformationsList.Count != 0)
+            {
 
-                var lastItem = LinearTransformationsList.Last();
+                var lastItem = Animation.TransformationsList.Last();
 
-                if (lastItem.Item4 == 0)
-                    AnimateInversion(lastItem.Item1, lastItem.Item2);
+                if (lastItem.Degrees == 0)
+                    AnimateInversion(lastItem.InitialPlane, lastItem.NewPlane);
                 else
-                    AnimateRotation(-lastItem.Item4, true);
+                    AnimateRotation(-lastItem.Degrees, true);
 
-                LinearTransformationsList.Remove(LinearTransformationsList.Last());
+                Animation.TransformationsList.Remove(Animation.TransformationsList.Last());
 
             }
         }
@@ -578,14 +549,16 @@ namespace VectorMatrixWPF.ViewModels
         {
             List<SolidColorBrush> colors = new List<SolidColorBrush>() {
                 Brushes.Red,
-                Brushes.Green,
+                Brushes.DarkRed,
+                Brushes.LawnGreen,
+                Brushes.DarkBlue,
                 Brushes.Purple,
-                Brushes.Orange,
-                Brushes.DarkRed
+                Brushes.Gold,
+                Brushes.DarkOrange
             };
 
             Random rand = new Random(Guid.NewGuid().GetHashCode());
-            int choice = rand.Next(0, colors.Count);
+            int choice = rand.Next(colors.Count);
 
             return colors[choice];
         }
@@ -595,34 +568,8 @@ namespace VectorMatrixWPF.ViewModels
         /// This is based on the current i-hat and j-hat values.
         /// Used to get correct vectors after linear transformations
         /// </summary>
-        private void UpdateVectorLines()
-        {
-            foreach (DWGridLine gridline in DynamicGridLines)
-            {
-                DWVector vector1 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector1.X, gridline.Vector1.Y);
-                DWVector vector2 = VectorMath.GetNewVectorLocation(IHat, JHat, gridline.Vector2.X, gridline.Vector2.Y);
-
-                gridline.DWLine.Line.X1 = CanvasXOrigin + (vector1.X * UnitLength);
-                gridline.DWLine.Line.Y1 = CanvasYOrigin - (vector1.Y * UnitLength);
-
-                gridline.DWLine.Line.X2 = CanvasXOrigin + (vector2.X * UnitLength);
-                gridline.DWLine.Line.Y2 = CanvasYOrigin - (vector2.Y * UnitLength);
-            }
-
-            foreach (DWLine dwline in VectorLines.Where(x => x.Type == LineType.VECTOR))
-            {
-                DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, dwline.X, dwline.Y);
-                dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);
-                dwline.Line.Y2 = CanvasYOrigin - (vector.Y * UnitLength);
-            }
-
-            foreach (DWLine dwline in BasisVectors)
-            {
-                DWVector vector = VectorMath.GetNewVectorLocation(IHat, JHat, dwline.X, dwline.Y);
-                dwline.Line.X2 = CanvasXOrigin + (vector.X * UnitLength);
-                dwline.Line.Y2 = CanvasYOrigin - (vector.Y * UnitLength);
-            }
-        }
+        private void UpdateVectorLines() =>        
+            Animation.UpdateLines(ref _vectorLines, ref _basisVectors, ref _dynamicGridLines, IHat, JHat, CanvasXOrigin, CanvasYOrigin, UnitLength);
 
         // VECTOR LINE MOUSE EVENTS
 

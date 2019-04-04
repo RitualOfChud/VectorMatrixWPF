@@ -16,7 +16,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using VectorMatrixClassLibrary;
 using VectorMatrixWPF.ViewModels;
 
 namespace VectorMatrixWPF 
@@ -203,8 +202,7 @@ namespace VectorMatrixWPF
                 MessageBox.Show("Please enter numbers only", "Input Invalid", MessageBoxButton.OK, MessageBoxImage.Error);
             else
             {
-                DWMatrix currentMatrix = new DWMatrix(Grid.IHat.X, Grid.IHat.Y, Grid.JHat.X, Grid.JHat.Y);
-                Grid.AnimateTransformation(currentMatrix, new DWMatrix(ix, iy, jx, jy));
+                Grid.AnimateTransformation(ix, iy, jx, jy);
                 IXMatrix_TextBox.Text = "";
                 IYMatrix_TextBox.Text = "";
                 JXMatrix_TextBox.Text = "";
@@ -222,7 +220,7 @@ namespace VectorMatrixWPF
         private void ChangeAnimationFactor_SelectionChanged(object sender, RoutedEventArgs e)
         {
             string selected = ChangeSpeed_ComboBox.SelectedValue.ToString();
-            Grid.AnimationFactor = Grid.Speeds[selected];
+            Grid.ChangeAnimationFactor(selected);
         }
         
         // KEYPRESS EVENTS

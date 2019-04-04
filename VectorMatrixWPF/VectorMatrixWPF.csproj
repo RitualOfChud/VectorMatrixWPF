@@ -54,6 +54,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\Animation.cs" />
+    <Compile Include="Models\MathHolder.cs" />
+    <Compile Include="Models\Transformation.cs" />
     <Compile Include="ViewModels\SquareGrid.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
